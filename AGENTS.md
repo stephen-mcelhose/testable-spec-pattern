@@ -8,7 +8,9 @@ A personal workshop for building a **Go behavioral-spec workflow** — tests tha
 
 ## North star
 
-**The goal is a workflow expressed as agentskills-standard skills.** Every skill in `.agents/skills/` should be a valid `agentskills.io` skill — proper frontmatter, `allowed-tools`, narrow focus, and a clear trigger description. Skills that don't meet the standard should be treated as drafts.
+**The goal is a workflow expressed as composable, agentskills-standard skills.** Every skill in `.agents/skills/` should be a valid `agentskills.io` skill — proper frontmatter, `allowed-tools`, narrow focus, and a clear trigger description. Skills that don't meet the standard should be treated as drafts.
+
+Skills should be composable in the style of [Matt Pocock's skills repo](https://github.com/mattpocock/skills): narrow discipline skills (model-invoked) composed by orchestrator skills (user-invoked). An orchestrator can call a discipline skill; disciplines never call each other. If a skill's purpose contains "and", split it. See [`docs/research/composable-skills.md`](docs/research/composable-skills.md) for the full research.
 
 ## Where to look
 
