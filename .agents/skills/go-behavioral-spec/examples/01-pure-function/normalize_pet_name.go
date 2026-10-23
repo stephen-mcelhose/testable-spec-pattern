@@ -20,6 +20,22 @@ type InvalidArgumentError struct {
 func (e *InvalidArgumentError) Error() string { return e.Message }
 func (e *InvalidArgumentError) Code() string  { return "INVALID_ARGUMENT" }
 
+// NotFoundError is returned when a pet resource does not exist.
+type NotFoundError struct {
+	Message string
+}
+
+func (e *NotFoundError) Error() string { return e.Message }
+func (e *NotFoundError) Code() string  { return "NOT_FOUND" }
+
+// InternalError is returned when a dependency fails for a non-not-found reason.
+type InternalError struct {
+	Message string
+}
+
+func (e *InternalError) Error() string { return e.Message }
+func (e *InternalError) Code() string  { return "INTERNAL" }
+
 func invalidArgument(msg string) error {
 	return &InvalidArgumentError{Message: msg}
 }

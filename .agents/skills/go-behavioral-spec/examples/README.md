@@ -2,13 +2,14 @@
 
 Canonical examples for the behavioral-spec discipline. Copy **structure and naming**, not the PetStore domain.
 
-**One module:** `go.mod` at this directory. Packages underneath share types without `replace`.
+**One module:** `go.mod` here. Numbered folders hold examples; `package` names may not match the directory (`pet` under `01-pure-function`).
 
-| # | Path | Pattern | Package |
-|---|------|---------|---------|
-| 01 | [01-pure-function/](./01-pure-function/) (code in [`pet/`](./pet/)) | Pure function | `…/examples/pet` |
-| 02 | `02-injected-dependency/` | Injected leaf (functional + method) | Planned |
-| 03 | `03-petstore-api/` | Resource-oriented CRUD | Planned |
+| Need | Open |
+|------|------|
+| Pure function | [`01-pure-function/`](./01-pure-function/) |
+| Injected dep — **function arg** | [`02-injected-dependency/functional/`](./02-injected-dependency/functional/) |
+| Injected dep — **struct method** | [`02-injected-dependency/method/`](./02-injected-dependency/method/) |
+| Resource-oriented CRUD | `03-petstore-api/` (planned) |
 
 ```bash
 cd .agents/skills/go-behavioral-spec/examples

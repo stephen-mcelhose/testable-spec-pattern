@@ -2,15 +2,15 @@
 
 **Teaches by example:** RFC 2119 table-driven spec for a pure helper — resource name normalize/validate.
 
-**Code lives in** [`../pet/`](../pet/) (shared examples module). This folder is the index entry / orientation for the pure-function pattern.
+Package clause is `pet`; import path is this directory (odd but fine for the examples module).
 
 ## Layout
 
 | Path | Role |
 |------|------|
 | [`../go.mod`](../go.mod) | Single module for all examples |
-| [`../pet/normalize_pet_name.go`](../pet/normalize_pet_name.go) | `NormalizePetName` + KnownError types |
-| [`../pet/normalize_pet_name_test.go`](../pet/normalize_pet_name_test.go) | Shape suite + `TestNormalizePetName_PetIDFormat` |
+| `normalize_pet_name.go` | `NormalizePetName` + KnownError types (`package pet`) |
+| `normalize_pet_name_test.go` | Shape suite + `TestNormalizePetName_PetIDFormat` |
 
 ## Contracts (summary)
 
@@ -24,5 +24,5 @@ MUST names are contracts only. Fixtures live in `examples` / nested `t.Run(in)` 
 
 ```bash
 cd .agents/skills/go-behavioral-spec/examples
-go test ./pet/... -count=1
+go test ./01-pure-function/... -count=1
 ```

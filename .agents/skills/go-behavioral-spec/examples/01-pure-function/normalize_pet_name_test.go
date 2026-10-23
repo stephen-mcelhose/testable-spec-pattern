@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"example.com/go-behavioral-spec/examples/pet"
+	pet "example.com/go-behavioral-spec/examples/01-pure-function"
 )
 
 // TestNormalizePetName covers resource shape: accept/trim prefixed names and reject
