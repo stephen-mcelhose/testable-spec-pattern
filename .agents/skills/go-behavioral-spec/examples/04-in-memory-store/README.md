@@ -2,7 +2,7 @@
 
 Domain `Store` with a **KnownError** caller-facing contract. Delegates bytes to an injected generic `DB`. Copy the **discipline**, not the pet domain.
 
-Standalone example (tests ≈ spec). Reuses `pet.KnownError` and `petstore.Pet` / `petstore.Store` method set for convenience (`var _ petstore.Store = (*Store)(nil)`). Store assigns Etag on Create/Update; Update/Delete take a precondition etag argument.
+Standalone example (tests ≈ spec). Reuses `pet.KnownError` and `petstore.Pet` / `petstore.Store` method set for convenience (`var _ petstore.Store = (*Store)(nil)`). Store assigns Etag on Create/Update from a hash of the resource; Update/Delete take a precondition etag argument.
 
 ## Agent lookup
 

@@ -2,22 +2,22 @@ package memstore
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
-	"sync/atomic"
 
 	pet "example.com/go-behavioral-spec/examples/01-pure-function"
 	"example.com/go-behavioral-spec/examples/03-petstore-api"
 )
 
 // Store matches petstore.Store: KnownError contract toward callers, bytes via injected DB.
-// Store assigns Etag on Create/Update. Update/Delete take a precondition etag argument.
+// Store assigns Etag on Create/Update from a hash of the resource. Update/Delete take a
+// precondition etag argument.
 type Store struct {
-	DB   DB
-	etag uint64
+	DB DB
 }
 
 // Compile-time check: same method set as 03's usage-site Store.
@@ -25,7 +25,7 @@ var _ petstore.Store = (*Store)(nil)
 
 // Create stores a new pet and assigns an Etag. Returns AlreadyExists if present.
 func (s *Store) Create(ctx context.Context, p petstore.Pet) (petstore.Pet, error) {
-	key := petKey(p.Name)
+	key := petKey(p.Name) // [IMPLEMENTATION_DETAIL - not behavior]
 	_, err := s.DB.Get(ctx, key)
 	if err == nil {
 		return petstore.Pet{}, &pet.AlreadyExistsError{Message: fmt.Sprintf("%s already exists", p.Name)}
@@ -34,7 +34,7 @@ func (s *Store) Create(ctx context.Context, p petstore.Pet) (petstore.Pet, error
 		return petstore.Pet{}, internalDB("get", err)
 	}
 
-	p.Etag = s.nextEtag()
+	p.Etag = etagFor(p)
 	if err := s.putPet(ctx, key, p); err != nil {
 		return petstore.Pet{}, err
 	}
@@ -58,7 +58,7 @@ func (s *Store) Update(ctx context.Context, p petstore.Pet, etag string) (petsto
 		return petstore.Pet{}, &pet.AbortedError{Message: "etag mismatch"}
 	}
 	cur.DisplayName = p.DisplayName
-	cur.Etag = s.nextEtag()
+	cur.Etag = etagFor(cur)
 	if err := s.putPet(ctx, key, cur); err != nil {
 		return petstore.Pet{}, err
 	}
@@ -132,9 +132,10 @@ func (s *Store) putPet(ctx context.Context, key string, p petstore.Pet) error {
 	return nil
 }
 
-func (s *Store) nextEtag() string {
-	n := atomic.AddUint64(&s.etag, 1)
-	return strconv.FormatUint(n, 10)
+// etagFor hashes the resource body (excluding Etag) so freshness tracks content.
+func etagFor(p petstore.Pet) string {
+	sum := sha256.Sum256([]byte(p.Name + "\x00" + p.DisplayName))
+	return hex.EncodeToString(sum[:8])
 }
 
 func petKey(name string) string {

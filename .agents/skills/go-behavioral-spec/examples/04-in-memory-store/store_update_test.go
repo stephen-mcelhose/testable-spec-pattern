@@ -22,7 +22,7 @@ func TestStore_Update(t *testing.T) {
 	existing := petstore.Pet{Name: "pets/fido", DisplayName: "Old", Etag: "1"}
 	existingRaw, _ := json.Marshal(existing)
 
-	t.Run("MUST update the pet and return it with a new store-assigned etag", func(t *testing.T) {
+	t.Run("MUST update the pet and return the stored Pet with a new etag", func(t *testing.T) {
 		t.Parallel()
 		db := &stubDB{getValue: existingRaw}
 		s := memstore.Store{DB: db}

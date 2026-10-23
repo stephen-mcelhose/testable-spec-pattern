@@ -15,11 +15,11 @@ import (
 )
 
 // TestStore_Create covers Store.Create — KnownError contract toward callers.
-// Order: create + store-assigned etag → AlreadyExists → Internal (DB get failure).
+// Order: create + return Pet with etag → AlreadyExists → Internal (DB get failure).
 func TestStore_Create(t *testing.T) {
 	t.Parallel()
 
-	t.Run("MUST create the pet and return it with a store-assigned etag", func(t *testing.T) {
+	t.Run("MUST create the pet and return the stored Pet including an etag", func(t *testing.T) {
 		t.Parallel()
 		db := &stubDB{getErr: memstore.ErrNotFound}
 		s := memstore.Store{DB: db}
@@ -30,7 +30,7 @@ func TestStore_Create(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "pets/fido", got.Name)
 		assert.Equal(t, "Fido", got.DisplayName)
-		assert.NotEmpty(t, got.Etag)
+		assert.NotEmpty(t, got.Etag) // freshness token for later Update/Delete; how it is computed is not the contract
 
 		assert.Equal(t, []string{"pet:pets/fido"}, db.getCalls)
 		require.Len(t, db.putCalls, 1)
