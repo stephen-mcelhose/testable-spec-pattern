@@ -10,7 +10,8 @@ timestamp: 2026-10-23T22:52:54Z
 
 | Page                                                                                                 | Type           | Description                                                                                          |
 | ---------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------- |
-| [Docs Conventions](./conventions.md)                                                                 | concept        | Canonical conventions for the docs/ knowledge base — folder taxonomy, OKF frontmatter, naming.      |
+| [Docs Conventions](./conventions.md)                                                                                 | concept        | Canonical conventions for the docs/ knowledge base — folder taxonomy, OKF frontmatter, naming.      |
+| [ADR-001: Project Structure](./decisions/001-project-structure.md)                                                  | decision       | Establishes the top-level layout — skills in .agents/skills/, docs as a wiki, examples/ standalone modules. |
 | [Test Discipline: Behavioral Specification Style](./discipline.md)                                   | concept        | The discipline for sustaining RFC 2119-style behavioral spec tests.                                  |
 | [Project: Testable Spec Pattern](./ideation/task.md)                                                 | design-doc     | Scope and goals for the Go behavioral-spec workflow project.                                         |
 | [Domain Names as the Bridge](./ideation/domain-names-as-bridge.md)                                  | proposal       | Hypothesis that domain names are a necessary precondition for requirement-traceable testable specs.  |

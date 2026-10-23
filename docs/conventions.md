@@ -113,3 +113,40 @@ Format:
 ```
 
 Operations: `ingest`, `query`, `lint`, `add`, `edit`, `init`
+
+---
+
+## ADR template
+
+All files in `docs/decisions/` MUST use this frontmatter:
+
+```yaml
+---
+type: decision
+title: "ADR-NNN: <Title>"
+description: <one sentence — what was decided and why it matters>
+tags: [adr, <topic>]
+timestamp: <ISO-8601 UTC — run `date -u +%Y-%m-%dT%H:%M:%SZ`>
+---
+```
+
+Body scaffold:
+
+```markdown
+## Status
+<Proposed | Accepted | Superseded by ADR-NNN>
+
+## Y-Statement
+In the context of <situation>, facing <concern>, we decided <option>, to achieve <quality>, accepting <downside>.
+
+## Context
+<What forces are at play? What problem is being solved?>
+
+## Decision
+<What was decided? Be concrete — include code/config snippets where helpful.>
+
+## Consequences
+<What are the results of this decision — positive and negative?>
+```
+
+Numbering: sequential, zero-padded to three digits (`001`, `002`, …). Never reuse a number.
