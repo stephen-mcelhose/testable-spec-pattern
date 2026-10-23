@@ -23,14 +23,25 @@ Skills should be composable in the style of [Matt Pocock's skills repo](https://
 
 ## Skills in this repo
 
-| Skill | Type | Purpose |
-| ----- | ---- | ------- |
-| [`go-behavioral-spec`](.agents/skills/go-behavioral-spec/SKILL.md) | discipline | Write Go tests as RFC 2119 behavioral specs |
-| [`docs-wiki`](.agents/skills/docs-wiki/SKILL.md) | discipline | Manage the `docs/` knowledge base |
+### Exists
 
-## Conventions
+| Skill | Purpose |
+| ----- | ------- |
+| [`go-behavioral-spec`](.agents/skills/go-behavioral-spec/SKILL.md) | Write Go tests as RFC 2119 behavioral specs |
+| [`docs-wiki`](.agents/skills/docs-wiki/SKILL.md) | Manage the `docs/` knowledge base |
+
+### Planned
+
+| Skill | Purpose |
+| ----- | ------- |
+| `contract-first-with-domain-names` | Guide contract-first design (OpenAPI, proto, ROD) grounded in domain names — the bridge between spec, implementation, and test |
+| `planning` | Consistent planning format with known sections, subdivided by class of problem |
+
+Skills are added when a documented need or failure demands them — not speculatively.
+
+## Skill conventions
 
 - Skills are **model-invoked** unless explicitly marked otherwise
 - Skill frontmatter MUST include `name`, `description`, `license`, `allowed-tools`
 - `allowed-tools` should be as narrow as possible — don't grant broad `Bash` access when specific patterns will do
-- New skills MUST address a documented need or failure — not just a hypothetical improvement (see `SCOPE.md` pattern from Matt Pocock research)
+- **Skills must be self-contained and packageable.** A skill may compose over other skills in the workflow, but MUST NOT depend on docs, examples, or any other file in this repo. If a skill needs reference material (examples, discipline docs), bundle it inside the skill directory. The goal: any skill could be copy-pasted to a different repo and work as-is.
