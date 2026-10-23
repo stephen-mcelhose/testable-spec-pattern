@@ -28,13 +28,39 @@ type NotFoundError struct {
 func (e *NotFoundError) Error() string { return e.Message }
 func (e *NotFoundError) Code() string  { return "NOT_FOUND" }
 
-// InternalError is returned when a dependency fails for a non-not-found reason.
+// InternalError is returned when a dependency fails for a non-domain reason.
 type InternalError struct {
 	Message string
 }
 
 func (e *InternalError) Error() string { return e.Message }
 func (e *InternalError) Code() string  { return "INTERNAL" }
+
+// AlreadyExistsError is returned when creating a resource that already exists.
+type AlreadyExistsError struct {
+	Message string
+}
+
+func (e *AlreadyExistsError) Error() string { return e.Message }
+func (e *AlreadyExistsError) Code() string  { return "ALREADY_EXISTS" }
+
+// AbortedError is returned when an etag does not match (AIP-135 / AIP-154 freshness).
+type AbortedError struct {
+	Message string
+}
+
+func (e *AbortedError) Error() string { return e.Message }
+func (e *AbortedError) Code() string  { return "ABORTED" }
+
+// FailedPreconditionError is returned when a delete/update cannot proceed because
+// child resources exist and force was not set (AIP-135 cascading delete). Not
+// exercised in the 03 example.
+type FailedPreconditionError struct {
+	Message string
+}
+
+func (e *FailedPreconditionError) Error() string { return e.Message }
+func (e *FailedPreconditionError) Code() string  { return "FAILED_PRECONDITION" }
 
 func invalidArgument(msg string) error {
 	return &InvalidArgumentError{Message: msg}
