@@ -14,3 +14,5 @@
 ## [2026-10-23] add | docs/decisions/ — ADR folder with template in conventions.md
 ## [2026-10-23] add | docs/decisions/001-project-structure.md — ADR-001: Project Structure
 ## [2026-10-23] add | docs/decisions/002-github-issues-as-work-tracker.md — ADR-002: GitHub Issues as Work Tracker
+## [2026-10-23] add | docs/decisions/003-kanban-workflow.md — ADR-003: Kanban Workflow via GitHub Issues
+## [2026-10-23] edit | AGENTS.md — added Workflow section (board state, DoR, session protocol)
