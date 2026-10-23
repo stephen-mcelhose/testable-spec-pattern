@@ -1,21 +1,17 @@
 # testable-spec-pattern
 
-Go behavioral-spec skill and examples: write tests that read like RFC 2119 contracts.
+A personal workshop for building a workflow around **Go behavioral specs** — tests that read like RFC 2119 contracts, grounded in domain names that bridge spec, implementation, and test.
 
-## What's here
+## Skills
 
-| Path | Purpose |
-|------|---------|
-| [`.agents/skills/go-behavioral-spec/`](.agents/skills/go-behavioral-spec/) | Cursor skill + discipline reference |
-| [`.agents/skills/go-behavioral-spec/examples/`](.agents/skills/go-behavioral-spec/examples/) | Runnable Go examples (one module) |
-| [`.agents/plans/stephen-workflow-skills/`](.agents/plans/stephen-workflow-skills/) | Workflow plans and lessons learned |
+| Skill | Purpose |
+| ----- | ------- |
+| [`go-behavioral-spec`](.agents/skills/go-behavioral-spec/SKILL.md) | Write Go tests as RFC 2119 behavioral specs |
+| [`docs-wiki`](.agents/skills/docs-wiki/SKILL.md) | Manage the `docs/` knowledge base |
 
-## Run the examples
+## Docs
 
-```bash
-cd .agents/skills/go-behavioral-spec/examples
-go test ./... -count=1
-```
+See [`docs/index.md`](docs/index.md) for the full knowledge base — discipline, research, ideation, and plans.
 
 ## License
 
