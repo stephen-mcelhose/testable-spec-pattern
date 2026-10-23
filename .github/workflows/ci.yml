@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Go test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .agents/skills/go-behavioral-spec/examples
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: .agents/skills/go-behavioral-spec/examples/go.mod
+          cache-dependency-path: .agents/skills/go-behavioral-spec/examples/go.sum
+
+      - name: Test
+        run: go test ./... -count=1 -race

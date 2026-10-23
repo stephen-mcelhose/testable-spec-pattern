@@ -1,6 +1,6 @@
-module example.com/go-behavioral-spec/examples
+module github.com/stephen-mcelhose/testable-spec-pattern/examples
 
-go 1.25.0
+go 1.25
 
 require github.com/stretchr/testify v1.10.0
 

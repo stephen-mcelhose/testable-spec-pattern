@@ -1,0 +1,32 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+/dist/
+
+# Test / coverage
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Go workspace (local only)
+go.work
+go.work.sum
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
