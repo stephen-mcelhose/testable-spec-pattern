@@ -13,3 +13,4 @@
 ## [2026-10-23] add | OKF frontmatter applied to all existing docs
 ## [2026-10-23] add | docs/decisions/ — ADR folder with template in conventions.md
 ## [2026-10-23] add | docs/decisions/001-project-structure.md — ADR-001: Project Structure
+## [2026-10-23] add | docs/decisions/002-github-issues-as-work-tracker.md — ADR-002: GitHub Issues as Work Tracker
