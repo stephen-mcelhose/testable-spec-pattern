@@ -1,3 +1,11 @@
+---
+type: proposal
+title: "Contract-First as the Foundation"
+description: Hypothesis that defining a contract first (OpenAPI, protobuf, ROD) naturally produces the spec that testable spec tests verify, resolving the hardest question — what is a MUST — before implementation begins.
+tags: [contract-first, openapi, rod, testable-spec, ideation]
+timestamp: 2026-10-23T22:45:43Z
+---
+
 # Ideation: Contract-First as the Foundation
 
 **Status:** hypothesis — not yet validated as discipline  

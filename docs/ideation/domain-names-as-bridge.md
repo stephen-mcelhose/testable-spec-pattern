@@ -1,3 +1,11 @@
+---
+type: proposal
+title: "Domain Names as the Bridge"
+description: Hypothesis that using domain names in types and functions is a necessary precondition for testable specs to remain requirement-traceable rather than degrading into implementation contracts.
+tags: [domain-driven, naming, testable-spec, ideation]
+timestamp: 2026-10-23T22:45:43Z
+---
+
 # Ideation: Domain Names as the Bridge
 
 **Status:** hypothesis — not yet validated as discipline  
