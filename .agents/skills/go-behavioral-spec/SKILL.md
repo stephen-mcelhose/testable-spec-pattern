@@ -1,6 +1,6 @@
 ---
 name: go-behavioral-spec
-description: Write Go tests that specify public interface behaviour using RFC 2119 language. Use when writing new tests, adding coverage, or specifying a function's contract. Trigger on phrases like "write tests for X", "spec out this function", "test the public interface of X", "write a behavioral spec".
+description: Write Go tests that specify behavioural contracts using RFC 2119 language. Use when writing new tests, adding coverage, or specifying a function's contract. Trigger on phrases like "write tests for X", "spec out this function", "test the public interface of X", "write a behavioral spec".
 license: MIT
 allowed-tools: Read Glob Grep Lsp Bash(go test:*) Bash(go build:*) Write Edit
 metadata:
@@ -9,7 +9,7 @@ metadata:
 
 # Go Behavioral Spec
 
-Write Go tests that read like a behavioral specification. Each `t.Run` name is a requirement statement. The suite documents what the public interface MUST do — not how it does it.
+Write Go tests that read like a behavioral specification. Each `t.Run` name is a requirement statement. Spec the unit whose behaviour you are dictating — exported entry point or unexported helper — and document what it MUST do, not how it does it.
 
 See `references/discipline.md` for the design principles behind this style.
 
@@ -25,7 +25,7 @@ See `references/discipline.md` for the design principles behind this style.
 
 ## Structure
 
-One `Test<Thing>` function per exported function or logical unit. Use the external test package (`package foo_test`) by default. Switch to `package foo` only when testing unexported behaviour — add a comment explaining why.
+One `Test<Thing>` function per function or logical unit you are specifying. Prefer `package foo_test` for exported entry points. Use `package foo` when the spec target is an unexported helper with its own rules — add a short comment explaining why; do not bleed those cases into the caller's suite. See `references/discipline.md` ("Spec the unit whose behaviour you are dictating").
 
 Write a baseline helper that returns the smallest valid input. Every test starts from it and overrides only what it's testing:
 
@@ -42,7 +42,7 @@ func validEC(eventType string) model.EventContext {
 
 ## Prefer table-driven tests
 
-Use a table when multiple inputs exercise the same code path. If a table row's assertion needs a conditional, those cases are different branches — use flat `t.Run`s instead.
+Use a table when multiple inputs share one assertion shape. If cases need divergent shapes, split into separate table suites — or use flat `t.Run`s when a table no longer fits. See `references/discipline.md`.
 
 ```go
 func TestInitializeEventContext(t *testing.T) {
@@ -124,7 +124,7 @@ t.Run("OPEN: CorrelationId MUST be included in annotations when present", func(t
 
 ## Stubs
 
-Hand-roll stubs for simple dependency control. Use counterfeiter (`make generate-fakes`) when you need call-count verification or argument capture.
+Prefer counterfeiter fakes when the interface has them or needs call-count / argument capture (`make generate-fakes`). Hand-roll a local stub for a tiny test-only stand-in; extract to a shared `*_stubs_test.go` only if multiple test files need it. See `references/discipline.md` (File layout).
 
 ---
 

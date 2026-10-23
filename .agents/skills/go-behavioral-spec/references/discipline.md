@@ -82,21 +82,31 @@ Code structured for specification-as-tests tends toward:
 
 This is a design discipline, not just a test discipline. If you find yourself reaching for conditional assertions inside a table row, ask: has a side effect leaked out of a leaf? If so, the fix is in the code — extract the pure transformation, leave the I/O call in the leaf behind its interface. The table preference surfaces this continuously, without requiring a separate design review.
 
-**When flat `t.Run`s are correct**
+**When one table is the wrong shape**
 
-Use flat tests when each subtest exercises a genuinely different code path — not different inputs to the same path, but different branches of behaviour. The distinction: a table shows the full case space of one path; flat tests show the independent branches of a function's structure. If you'd need a conditional in the table assertion, the cases are different paths and belong as flat tests.
+A table shows the full case space of one assertion shape. When cases need divergent shapes — `if tc.wantFoo != nil`, different stub setups, different success vs error checks — more than one specification is sharing a costume.
 
-Anti-pattern: a table where half the cases need `if tc.wantFoo != nil { ... }`. That's flat tests wearing a table costume. Pull them out.
+Prefer splitting by assertion shape into separate table-driven suites (e.g. success vs error). Use flat `t.Run`s when the branches are not uniform enough for a table. Prefer tables when a group of cases still shares one shape — see preference above.
+
+One optional nil-check does not automatically require a split; several or most cases needing different assertion shapes does.
 
 ---
 
-## The public interface principle
+## Spec the unit whose behaviour you are dictating
 
-Test the public interface, not the implementation.
+The covenant is about **contracts**, not about export visibility. Spec the function (or logical unit) whose rules you are writing down. Do not restating a leaf's rules on its caller.
 
-External test packages (`package foo_test`) enforce this mechanically — you literally cannot access unexported fields. This is a feature. If you find yourself needing to reach into unexported state to assert something, ask: is that state actually observable through the public interface? If not, the test is asserting an implementation detail that can change without breaking the contract.
+| Spec target | Test package | Why |
+| ----------- | ------------ | --- |
+| Exported handler / API entry point | `package foo_test` preferred | Callers depend on this surface; the external package is a cheap fence against private fields |
+| Unexported helper with real behavioural rules | `package foo` + short why-comment | The helper *is* the unit of behaviour; forcing every case through the caller bloats the caller suite or under-specs the leaf |
+| Either | Assert outcomes on that unit's contract | Call counts and private wiring are still implementation details unless the contract is about that call |
 
-Internal test packages (`package foo`, white-box) are sometimes legitimate — for pure functions that are unexported but too complex to skip. When you do this, add a comment explaining why the public interface is insufficient.
+`package foo_test` is a useful default for exported entry points — you cannot reach unexported state, which pushes assertions toward observable results. It is not a universal law. White-box specs for unexported helpers are first-class when those helpers own the rules (e.g. audit-time selection, parsing fallbacks). Prefer an internal suite over bleeding leaf cases into the caller's table.
+
+Anti-pattern: only testing the fat orchestrator, then either (a) omitting leaf contracts or (b) exporting helpers solely so `foo_test` can see them. Spec the leaf where it lives.
+
+White-box access does not turn incidental internals into RFC 2119 requirements. If it isn't part of the unit's contract, don't assert it as MUST/SHOULD/MAY. A separate, non-spec test *may* document an implementation detail in plain language when that's useful (coverage, regression, wiring example). Alternatively, if it IS a part of the unit's contract, assert it as MUST/SHOULD/MAY.
 
 ---
 
@@ -115,8 +125,8 @@ The benefit: when the test fails, you know exactly *which* contract was violated
 For every optional field or conditional side effect, write both directions:
 
 ```go
-t.Run("non-empty AuditURI MUST annotate spec", ...)
-t.Run("empty AuditURI MUST NOT add annotation", ...)
+{ name: "non-empty AuditURI MUST annotate spec", ... },
+{ name: "empty AuditURI MUST NOT add annotation", ... },
 ```
 
 The absence test is easy to skip — "obviously if the field is empty, nothing happens." But that's exactly when it matters. If someone adds code that accidentally writes an empty annotation for missing URIs, only the absence test catches it. Without it, the spec is asymmetric: you've specified that the field *can* be set, but not that it *only* gets set when appropriate.
@@ -136,13 +146,13 @@ When you change a function's behaviour, check the test names, not just the test 
 
 ## Anti-patterns
 
-**Descriptive names without keywords.** `"skips delete events"` — is this a MUST or a MAY? Is skipping required or incidental? The reader cannot tell without reading the code.
+**Descriptive names in a spec suite.** In an RFC 2119 suite, `"skips delete events"` is ambiguous — is this a MUST or incidental? Prefer a keyword so the contract is explicit. Outside the spec (coverage, regression, wiring examples), descriptive names without keywords are preferred — do not dress incidentals in MUST/SHOULD/MAY.
 
-**Testing implementation instead of contract.** `"calls GetLabMethod with the correct observable name"` — this asserts *how* the function works, not *what it produces*. If the implementation changes (e.g., batches the call), the test breaks even if the contract is intact.
+**Testing implementation instead of contract (in a spec suite).** `"calls GetLabMethod with the correct observable name"` asserts *how* the function works, not *what it produces*. In a behavioral spec that freezes the contract to an incidental call shape — if the implementation changes (e.g., batches the call), the test breaks even if the contract is intact. A separate non-spec test may document call wiring in plain language when that is useful; do not elevate it to MUST/SHOULD/MAY.
 
-**Silent gaps.** A function has 10 conditional paths; the test covers 4. Use `t.Skip("OPEN: ...")` for any known gap so the absence is explicit and tracked.
+**Silent gaps.** Prefer covering the path. If a contract is known but not yet verifiable, you MAY mark it with `t.Skip("OPEN: …")` (or SHOULD + skip body). Do not add OPEN skips for every uncovered line or for paths you intentionally won't chase. Many paths are a prompt to ask whether this unit owns too much or a leaf should own some rules — path count alone is not a smell.
 
-**Tables for orthogonal cases.** Two cases that exercise completely different code paths stuffed into the same table to "reduce boilerplate." The table obscures the fact that these are separate specifications.
+**Tables for orthogonal cases.** Two cases that exercise completely different code paths (or need different assertion shapes) stuffed into the same table to "reduce boilerplate." Split into separate table suites, or use flat tests when a table no longer fits — see above.
 
 **MUST on things you haven't verified.** Writing `MUST` to sound authoritative when you're not sure the behaviour is actually required. If you're not sure, write `SHOULD` and document why, or clarify the requirement first.
 
@@ -156,10 +166,8 @@ This approach avoids the half-upgraded file problem — a mix of MUST names and 
 
 ---
 
-## Open questions
+## File layout
 
-These require team agreement, not just individual skill:
+**Stubs and fakes.** Prefer counterfeiter fakes (`*fakes/`, `make generate-fakes`) for package interfaces that already have them or warrant generation (call counts, argument capture, shared across packages). Hand-roll a local stub in the `_test.go` that uses it when a tiny test-only stand-in is enough. Extract a shared hand stub to `<pkg>_stubs_test.go` (or similar) only when that same stub is used across multiple test files — do not hand-roll a parallel fake for an interface that already has counterfeiter coverage.
 
-1. **Stub placement.** Stubs inline in `_test.go` vs a dedicated `<pkg>_stubs_test.go` (as in the pipeline packages). What's the rule for when a stub warrants its own file?
-
-2. **One test file per source file, or per logical grouping?** When a source file has multiple exported things, do the tests all live in `<file>_test.go`, or do they split by concern?
+**Test files.** Default: one `*_test.go` per source file (`foo.go` → `foo_test.go`; white-box helpers MAY use `foo_internal_test.go`). You MAY collapse several source files into one test file when that grouping is also one logical spec (same contracts, same ordering, same fixtures). Do not merge unrelated specs just to reduce file count.
