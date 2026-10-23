@@ -1,8 +1,8 @@
 ---
 name: docs-wiki
-description: Manage the docs/ knowledge base for this repo. Based on the llm-wiki pattern — the LLM is the programmer, docs/ is the codebase. Use when ingesting new sources, querying the docs, or linting for stale content. Trigger on "docs-wiki ingest", "add this to the docs", "update the docs with", "query the docs about", "lint the docs", or "what do the docs say about".
+description: Manage the docs/ knowledge base for this repo. The LLM is the programmer; docs/ is the codebase. Invoke this skill whenever the user wants to add a new idea, article, URL, or conversation snippet to the docs ("add this to the docs", "document this", "ingest this", "put this in the knowledge base", "update the docs with"), ask what the docs already say ("what do the docs say about X", "query the docs", "what do we know about X"), or audit the knowledge base for gaps and staleness ("lint the docs", "audit the docs", "are the docs consistent"). Also invoke when the user shares a URL or file alongside any mention of documentation or knowledge base.
 license: MIT
-allowed-tools: Read Glob Grep Bash(git add:*) Bash(git commit:*) Bash(git status:*) Bash(date:*) Write Edit
+allowed-tools: Read Glob Grep WebFetch WebSearch Bash(git add:*) Bash(git commit:*) Bash(git status:*) Bash(date:*) Write Edit
 metadata:
   version: "1.0.0"
   based-on: llm-wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
@@ -12,7 +12,9 @@ metadata:
 
 Manages the `docs/` knowledge base following the Karpathy LLM-wiki pattern: the LLM is the programmer; `docs/` is the codebase.
 
-**Before every operation:** read `docs/conventions.md`. It defines the folder taxonomy, OKF types, naming rules, and cross-reference conventions. The conventions file is authoritative — if it contradicts anything in this skill, the conventions file wins.
+**Before every operation:**
+1. Check that `docs/conventions.md`, `docs/index.md`, and `docs/log.md` exist. If any are missing, stop and tell the user — do not proceed without them.
+2. Read `docs/conventions.md`. It defines the folder taxonomy, OKF types, naming rules, and cross-reference conventions. The conventions file is authoritative — if it contradicts anything in this skill, the conventions file wins.
 
 **Docs root:** always `docs/` relative to the repo root. Never prompt the user to locate it.
 
@@ -46,8 +48,29 @@ Add a new source to the docs and propagate its ideas to related pages.
    ---
    ```
 
-   Body scaffold by type — use the matching template from the OKF skill. For `spike`:
+   Body scaffold by type — use the matching template below. Focus on synthesis, not transcription. Cross-reference related docs with relative markdown links.
 
+   **`concept`** — explanation of a principle or domain idea:
+   ```markdown
+   ## Overview
+   <2–3 paragraphs synthesizing the concept>
+
+   ## Key Points
+   - …
+
+   ## Sources
+   - `<url-or-path>`
+   ```
+
+   **`proposal`** — hypothesis or early-stage idea:
+   ```markdown
+   ## The Observation
+   ## The Hypothesis
+   ## Open Questions
+   ## What This Is NOT Yet
+   ```
+
+   **`spike`** — research findings:
    ```markdown
    ## Goal
    ## Approach
@@ -56,13 +79,29 @@ Add a new source to the docs and propagate its ideas to related pages.
    ## References
    ```
 
-   Focus on synthesis, not transcription. Cross-reference related docs with relative markdown links.
+   **`design-doc`** — detailed design:
+   ```markdown
+   ## Context
+   ## Goals
+   ## Non-Goals
+   ## Design
+   ## Alternatives
+   ## Open Questions
+   ```
 
-5. **Propagate to related pages.** Read `docs/index.md` to identify related pages. For each:
-   - Read the page.
+   **`decision`** — ADR-style:
+   ```markdown
+   ## Status
+   ## Y-Statement
+   ## Context
+   ## Decision
+   ## Consequences
+   ```
+
+5. **Propagate to related pages.** Use `docs/index.md` to shortlist candidates (scan titles and descriptions), then read those pages to confirm relevance. For each confirmed related page:
    - Integrate what the new source adds, confirms, or contradicts.
    - Edit in-place (new section, updated claim, added cross-reference).
-   - Upgrade incomplete OKF frontmatter while editing.
+   - Upgrade incomplete OKF frontmatter while editing (preserve body exactly).
 
 6. **Update `docs/index.md`.** Add a row for the new page:
 
@@ -84,15 +123,14 @@ Synthesize an answer from existing docs.
 
 ### Steps
 
-1. Read `docs/index.md` to map the docs. Identify 3–6 most relevant pages.
-2. Read those pages. Follow relative links to related pages when relevant.
-3. Write a cited answer — every claim traces back to a specific page:
+1. Read `docs/index.md` to map the docs. Shortlist 3–6 most relevant pages by title and description, then read them. Follow relative links to related pages when they seem relevant.
+2. Write a cited answer — every claim traces back to a specific page:
 
    > <Answer.> ([Page Title](./relative/path.md))
 
-4. **Write-back rule:** if synthesis produced a new insight not captured anywhere, write it as a new doc (`type: concept`, slug `synthesis-<topic>-<date>.md`) with OKF frontmatter. Don't write back routine answers.
+3. **Write-back rule:** if synthesis produced a new insight not captured anywhere, write it as a new `concept` doc to `docs/research/synthesis-<topic>-<YYYY-MM-DD>.md` with OKF frontmatter. Don't write back routine answers — only genuinely new syntheses.
 
-5. Append to `docs/log.md`:
+4. Append to `docs/log.md`:
 
    ```
    ## [YYYY-MM-DD] query | <question truncated to 80 chars>
@@ -108,13 +146,13 @@ Audit `docs/` and fix what can be fixed automatically.
 
 1. `Glob("**/*.md", "docs/")` to inventory all pages. Read `docs/index.md`.
 
-2. Check each page for:
+2. Check each content page for (skip `docs/log.md` — it has no OKF frontmatter by design):
    - **Orphans** — no inbound relative link from any other page
    - **Contradictions** — claims that conflict across pages
    - **Stale claims** — tied to a source superseded by a newer page
    - **Missing cross-references** — mentions a concept that has its own page but doesn't link to it
    - **Index gaps** — not listed in `docs/index.md`
-   - **Missing OKF frontmatter** — no `---` block or missing required fields
+   - **Missing OKF frontmatter** — no `---` block or missing required fields (`type`, `title`, `description`, `timestamp`)
 
 3. Fix automatically:
    - Add missing relative links inline
@@ -122,7 +160,7 @@ Audit `docs/` and fix what can be fixed automatically.
    - Mark contradictions: `> ⚠️ Contradiction with [Page](./relative/path.md) — needs resolution.`
    - Upgrade incomplete OKF frontmatter (preserve body exactly)
 
-4. Report what requires human judgment — contradictions needing resolution, gaps needing new sources.
+4. Report what requires human judgment — contradictions needing resolution, gaps addressable only by new sources.
 
 5. Append to `docs/log.md`:
 
@@ -143,8 +181,8 @@ Audit `docs/` and fix what can be fixed automatically.
 | **Frontmatter**    | OKF required (`type`, `title`, `description`, `timestamp`); `resource` and `tags` optional |
 | **Cross-refs**     | Standard relative markdown links; paths relative to linking file; no `[[wikilinks]]`       |
 | **index.md**       | Updated on every write operation                                                           |
-| **log.md**         | Append-only — never rewrite or delete entries                                              |
-| **Synthesis**      | Integrate and cross-reference; never just copy a source verbatim                           |
+| **log.md**         | Append-only — no OKF frontmatter; never rewrite or delete entries                         |
+| **Synthesis**      | Integrate and cross-reference; never just copy a source verbatim                          |
 | **Timestamps**     | Frontmatter: `date -u +%Y-%m-%dT%H:%M:%SZ`. Log entries: `YYYY-MM-DD`                    |
 
 ---
@@ -156,4 +194,5 @@ Audit `docs/` and fix what can be fixed automatically.
 - **Propagate aggressively.** Ingest is a ripple, not a point write — touch every related page.
 - **Cite everything.** Every claim traceable to a source must say which source.
 - **index.md is always current.** Every write finishes by updating the index.
-- **log.md is append-only.** New entries go at the bottom.
+- **log.md is append-only.** New entries go at the bottom. Never add OKF frontmatter to it.
+- **Git is opt-in.** After writing, offer to commit the changes — don't commit silently.
