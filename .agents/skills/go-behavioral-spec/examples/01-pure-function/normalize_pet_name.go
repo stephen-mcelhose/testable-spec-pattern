@@ -62,7 +62,7 @@ type FailedPreconditionError struct {
 func (e *FailedPreconditionError) Error() string { return e.Message }
 func (e *FailedPreconditionError) Code() string  { return "FAILED_PRECONDITION" }
 
-func invalidArgument(msg string) error {
+func NewInvalidArgumentError(msg string) error {
 	return &InvalidArgumentError{Message: msg}
 }
 
@@ -78,10 +78,10 @@ func NormalizePetName(name string) (string, error) {
 
 	collection, id, ok := strings.Cut(name, "/")
 	if !ok || collection != "pets" || id == "" || strings.Contains(id, "/") {
-		return "", invalidArgument("pet name must be pets/{pet}")
+		return "", NewInvalidArgumentError("pet name must be pets/{pet}")
 	}
 	if !petIDRE.MatchString(id) {
-		return "", invalidArgument(fmt.Sprintf("pet id %q must be [a-z0-9-]{1,63} with no leading or trailing hyphen", id))
+		return "", NewInvalidArgumentError(fmt.Sprintf("pet id %q must be [a-z0-9-]{1,63} with no leading or trailing hyphen", id))
 	}
 	return "pets/" + id, nil
 }
