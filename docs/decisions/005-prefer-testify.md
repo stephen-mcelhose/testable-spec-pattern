@@ -30,7 +30,7 @@ The standard library argument has real weight: zero dependencies, no import grap
 | Table-driven test readability  | Verbose per-assertion boilerplate         | One line per assertion                        |
 | Dependency                     | None                                      | One well-maintained module                   |
 
-The cost of testify is a single, stable, widely-adopted dependency. The benefit is tests that read as documentation without spending tokens on assertion boilerplate.
+The cost of testify is a single, stable, widely-adopted dependency. The benefit is tests that read as documentation without spending tokens on assertion boilerplate. testify is also by far the most widely used Go assertion library — contributors, reviewers, and AI agents will recognise its patterns immediately. Familiarity lowers the cost of reading and reviewing tests, which matters as much as writing them.
 
 ## Decision
 
