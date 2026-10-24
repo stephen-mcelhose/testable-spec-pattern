@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package petstore.v1;
+
+option go_package = "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1;petstorev1";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+
+// User is an account in the petstore.
+message User {
+  option (google.api.resource) = {
+    type: "petstore.example.com/User"
+    pattern: "users/{user}"
+    singular: "user"
+    plural: "users"
+  };
+
+  // The resource name of the user.
+  // Format: users/{user}
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The user's login name. Immutable after creation.
+  string username = 2 [(google.api.field_behavior) = IMMUTABLE];
+
+  // The user's first name.
+  string first_name = 3;
+
+  // The user's last name.
+  string last_name = 4;
+
+  // The user's email address.
+  string email = 5;
+
+  // The user's phone number.
+  string phone = 6;
+
+  // The user's status (0 = inactive, 1 = active, 2 = banned).
+  int32 user_status = 7;
+}
+
+// GetUserRequest is the request for GetUser.
+message GetUserRequest {
+  // The name of the user to retrieve.
+  // Format: users/{user}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/User"}
+  ];
+}
+
+// CreateUserRequest is the request for CreateUser.
+message CreateUserRequest {
+  // The user to create.
+  User user = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The ID to use for the user. Becomes the final segment of the user's name.
+  // Typically the username.
+  string user_id = 2;
+}
+
+// UpdateUserRequest is the request for UpdateUser.
+message UpdateUserRequest {
+  // The user to update. The user's name field is used to identify the user.
+  User user = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The list of fields to update. If omitted, all populated fields are updated.
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+// DeleteUserRequest is the request for DeleteUser.
+message DeleteUserRequest {
+  // The name of the user to delete.
+  // Format: users/{user}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/User"}
+  ];
+}
+
+// UserService manages user accounts in the petstore.
+service UserService {
+  // Gets a user by name.
+  rpc GetUser(GetUserRequest) returns (User) {
+    option (google.api.http) = {get: "/v1/{name=users/*}"};
+    option (google.api.method_signature) = "name";
+  }
+
+  // Creates a user.
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/v1/users"
+      body: "user"
+    };
+    option (google.api.method_signature) = "user,user_id";
+  }
+
+  // Updates a user. Supports partial update via update_mask.
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      patch: "/v1/{user.name=users/*}"
+      body: "user"
+    };
+    option (google.api.method_signature) = "user,update_mask";
+  }
+
+  // Deletes a user.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/{name=users/*}"};
+    option (google.api.method_signature) = "name";
+  }
+}
