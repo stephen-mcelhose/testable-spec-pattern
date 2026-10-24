@@ -1,4 +1,4 @@
-package petstore
+package pet
 
 import (
 	"fmt"

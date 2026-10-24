@@ -24,6 +24,10 @@ go.work.sum
 *~
 .DS_Store
 
+# csgdaa-code generated (local skill registry)
+.agents/skills.json
+.agents/skills.lock
+
 # Secrets / env
 .env
 .env.*

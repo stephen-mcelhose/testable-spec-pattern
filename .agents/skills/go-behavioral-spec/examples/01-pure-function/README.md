@@ -26,3 +26,4 @@ MUST names are contracts only. Fixtures live in `examples` / nested `t.Run(in)` 
 cd .agents/skills/go-behavioral-spec/examples
 go test ./01-pure-function/... -count=1
 ```
+

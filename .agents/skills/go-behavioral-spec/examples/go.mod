@@ -1,6 +1,6 @@
-module github.com/stephen-mcelhose/testable-spec-pattern/examples
+module example.com/go-behavioral-spec/examples
 
-go 1.25
+go 1.27.3
 
 require github.com/stretchr/testify v1.10.0
 
@@ -9,3 +9,5 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/stephen-mcelhose/testable-spec-pattern => ../..

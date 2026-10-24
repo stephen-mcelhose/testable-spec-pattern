@@ -28,58 +28,11 @@ This repo uses GitHub Issues as a lightweight Kanban board. The workflow applies
 
 ### Start of session
 
-1. **Resume before starting.** Check for any issue already assigned to you. If one exists, continue it.
-2. **Pick from backlog.** If nothing is in progress, look at open unassigned issues. Human contributors set priority. In the absence of explicit priority, choose the most unblocked issue — the one with the fewest unresolved upstream dependencies.
-3. **Ask: is this ready to work?** Apply the Definition of Ready below. If the issue is not ready, comment identifying the gap and stop — do not start work on an unready issue.
-4. **Signal In Progress** by assigning yourself to the issue.
-
-### Definition of Ready
-
-An issue is ready to work when all of the following are true:
-
-- [ ] Single deliverable — no bundled concerns
-- [ ] The "why" is stated (the pain or gap being addressed)
-- [ ] At least one concrete use-case
-- [ ] Acceptance criteria are specific and individually checkable
-- [ ] Out of scope is explicit
-- [ ] Dependencies on other issues are listed; each is either closed or explicitly waived
-- [ ] No open questions in the issue that would block progress
-
-If any item is unchecked: comment on the issue with what is missing. Do not start work.
-
-### In flight
-
-- Work one issue at a time.
-- Reference the issue in every commit (`refs #N`).
-- If you discover scope not in the acceptance criteria, comment on the issue before expanding. Do not silently extend the work.
-
-### End of session
-
-- **Done:** close the issue and reference the commit (`closes #N`).
-- **Incomplete:** comment on the issue with current state and what remains; commit in-progress work to a branch. Never leave untracked in-progress state.
-
----
-
-## Workflow
-
-This repo uses GitHub Issues as a lightweight Kanban board. The workflow applies equally to human contributors and AI agents — every step must be executable by either.
-
-### Board state
-
-| Issue state       | Kanban column   |
-| ----------------- | --------------- |
-| Open, unassigned  | Backlog         |
-| Open, assigned    | In Progress     |
-| Closed            | Done            |
-
-**WIP limit: 1.** Only one issue In Progress at a time. Finish or hand off before pulling the next.
-
-### Start of session
-
-1. **Resume before starting.** Check for any issue already assigned to you (`gh issue list --assignee @me`). If one exists, continue it.
+1. **Resume before starting.** Check for any issue already assigned to you (`gh issue list --assignee @me`). If one exists, check out its branch (`git checkout {n}-{slug}`) and continue.
 2. **Pick from backlog.** If nothing is in progress, look at open unassigned issues (`gh issue list`). Human contributors set priority. In the absence of explicit priority, choose the most unblocked issue — the one with the fewest unresolved upstream dependencies.
 3. **Ask: is this ready to work?** Apply the Definition of Ready below. If the issue is not ready, comment identifying the gap and stop — do not start work on an unready issue.
 4. **Signal In Progress** by assigning yourself: `gh issue edit {n} --add-assignee @me`.
+5. **Create a branch:** `git checkout -b {n}-{short-slug}` (e.g. `git checkout -b 5-go-scaffold`). All commits go to this branch — never directly to `main`.
 
 ### Definition of Ready
 
@@ -97,14 +50,14 @@ If any item is unchecked: comment on the issue with what is missing (`gh issue c
 
 ### In flight
 
-- Work one issue at a time.
+- All commits go to the issue branch — never directly to `main`.
 - Reference the issue in every commit (`refs #N`).
 - If you discover scope not in the acceptance criteria, comment on the issue before expanding. Do not silently extend the work.
 
 ### End of session
 
-- **Done:** close the issue referencing the commit — use `closes #N` in the commit message, or `gh issue close {n}`.
-- **Incomplete:** comment on the issue with current state and what remains (`gh issue comment {n} --body "..."`); commit in-progress work to a branch. Never leave untracked in-progress state.
+- **Done:** open a PR (`gh pr create --fill`) with `closes #N` in the body. Merge after review.
+- **Incomplete:** push the branch (`git push -u origin {n}-{slug}`); comment on the issue with current state and what remains (`gh issue comment {n} --body "..."`). Never leave untracked in-progress state.
 
 ---
 
