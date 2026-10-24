@@ -20,28 +20,34 @@ Title and labels together are the **discovery contract** for the backlog. The bo
 ### The title formula
 
 ```
-<type>: <domain-artifact> — <specific-change>
+<Verb> <domain-artifact> — <specific-change>
 ```
 
-The em-dash (`—`) divides the artifact from the action. It makes `gh issue list` scannable at two levels:
-- Left of the em-dash → which part of the system
+The verb leads. It is the type signal — readers scan it to triage without needing a prefix token. The em-dash divides the artifact from the specific action being taken:
+- Left of the em-dash → which artifact in the system
 - Right of the em-dash → what specifically is changing
+
+`Spike:` is the only permitted prefix, used to keep explorations visually distinct:
+```
+Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff
+```
 
 A title must stand alone. A reader cold-scanning `gh issue list` should not need to open the issue to understand the nature of the work.
 
-### Type prefix (mandatory)
+### Canonical verbs by work class
 
-Drawn from Conventional Commits, extended with `spike:` for issue work:
+Choose the verb that most precisely describes the action. The verb is the type signal — use the table, don't invent.
 
-| Prefix        | When to use                                                      |
-| ------------- | ---------------------------------------------------------------- |
-| `feat:`       | Delivers new capability — service feature, endpoint, skill       |
-| `fix:`        | Corrects a defect in existing behaviour                          |
-| `chore:`      | Maintenance — skill updates, config, tooling, doc cleanup        |
-| `docs:`       | Documentation-only (ADR, wiki entry, reference doc)              |
-| `refactor:`   | Restructures without changing observable behaviour               |
-| `spike:`      | Time-boxed investigation — produces a finding, not a feature     |
-| `test:`       | Adds or repairs behavioral/spec tests, no implementation change  |
+| Work class         | Canonical verbs                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| Proto contract     | `Define` (new resource), `Annotate` (field behaviors), `Restructure` (file layout), `Fix` (linter violations) |
+| gRPC method        | `Wire` (impl to generated types), `Spec` (behavioral tests), `Add` (new method), `Fix` (error codes, pagination) |
+| Kafka consumer     | `Implement` (new consumer), `Add` (handler logic), `Fix` (error path/retry)                 |
+| PubSub consumer    | `Implement` (new consumer), `Add` (handler logic), `Fix` (ack/nack strategy)                |
+| Go service / pkg   | `Implement` (new service), `Wire` (dependencies), `Extract` (interface/helper), `Refactor`  |
+| Skill              | `Add` (new guidance), `Update` (existing guidance), `Refactor`                              |
+| ADR / docs         | `Document` (decision/ADR), `Add` (reference doc), `Update`                                  |
+| Investigation      | `Spike:` (prefix, not a verb — keeps explorations visually distinct)                        |
 
 ### Artifact naming
 
@@ -63,20 +69,21 @@ The artifact is a domain noun + optional qualifier. Use the most specific name a
 
 **Good:**
 ```
-feat: BillingService.CreateInvoice RPC — wire implementation to generated proto types
-feat: billing Invoice proto — define AIP-compliant resource with field behaviors
-chore: write-issue skill — add titling guidance and domain references
-spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff strategy
-docs: ADR-007 — adopt buf as proto toolchain enforcement gate
-test: BillingService.ListInvoices spec — add behavioral spec for pagination contract
+Wire BillingService.CreateInvoice RPC — implementation to generated proto types
+Define billing Invoice proto — AIP-compliant resource with field behaviors
+Update write-issue skill — add titling guidance and verb table
+Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff strategy
+Document ADR-007 — adopt buf as proto toolchain enforcement gate
+Spec BillingService.ListInvoices — behavioral spec for pagination contract
 ```
 
 **Bad:**
 ```
-update billing service           ← no type, no artifact, no action
-feat: improve proto definitions  ← artifact vague, action vague
-Investigate Kafka options        ← no type prefix, no artifact, no specific question
-fix things                       ← all three fields missing
+update billing service             ← no artifact, no specific action
+Improve proto definitions          ← artifact vague, verb too weak
+Investigate Kafka options          ← use Spike: prefix, name the artifact and question
+fix things                         ← all three fields missing
+Wire up the thing                  ← artifact unnamed
 ```
 
 ### Labels
@@ -191,7 +198,7 @@ Before writing anything, identify:
 
 Before drafting the body, lock in the title and labels:
 
-1. **Apply the formula:** `<type>: <domain-artifact> — <specific-change>`. Consult the artifact naming table and type prefix table in `## Title and labels`.
+1. **Apply the formula:** `<Verb> <domain-artifact> — <specific-change>`. Choose the verb from the canonical verb table in `## Title and labels`. For investigations, use `Spike:` as a prefix instead.
 2. **Check for duplicates:** `gh issue list --search "<key term from the artifact or action>"`. If a related issue exists, note the relationship — either this is a duplicate (stop), or add a dependency reference.
 3. **Pick 1–2 labels** from the vocabulary in `## Title and labels`.
 
@@ -230,7 +237,7 @@ List at least two explicit exclusions. These are things a reasonable implementer
 
 Before presenting the issue, verify every item:
 
-- [ ] Title satisfies the formula: type prefix, named artifact, em-dash, specific change
+- [ ] Title satisfies the formula: canonical verb (or `Spike:`), named artifact, em-dash, specific change
 - [ ] Single deliverable — no bundled concerns
 - [ ] The "why" is stated (the pain or gap being addressed)
 - [ ] At least one concrete use-case
@@ -311,5 +318,5 @@ If any item fails, revise before presenting.
 - **State the why.** An issue without a Why cannot be prioritised or deprioritised — it just sits.
 - **Criteria are verifiable.** If you cannot check a criterion without human judgement, rewrite it.
 - **Out of scope is mandatory.** At least two explicit exclusions. If you can't name any, the scope is underspecified.
-- **Title and labels come first.** Before drafting the body, lock in the title formula and pick labels. A title that can't be written yet signals the scope isn't clear enough.
+- **Title and labels come first.** Before drafting the body, lock in the verb and labels. A title that can't be written yet signals the scope isn't clear enough.
 - **Definition of Ready is the gate.** Do not present the issue until all eight items are checked.
