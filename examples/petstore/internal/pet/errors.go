@@ -1,4 +1,4 @@
-package petstore
+package pet
 
 // KnownError is a typed API error with a machine-readable code.
 // It is a teaching stand-in for gRPC status errors — not production gRPC.

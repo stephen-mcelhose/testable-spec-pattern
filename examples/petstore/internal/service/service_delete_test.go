@@ -1,4 +1,4 @@
-package petstore_test
+package service_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	petstore "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 )
 
 // TestPetService_DeletePet covers DeletePet against AIP-135 behaviours we claim:
@@ -61,7 +62,7 @@ func TestPetService_DeletePet(t *testing.T) {
 			petName: "pets/missing",
 			etag:    "v1",
 			store: stubStore{
-				deleteErr: &petstore.NotFoundError{Message: "pets/missing not found"},
+				deleteErr: &pet.NotFoundError{Message: "pets/missing not found"},
 			},
 			wantCode: "NOT_FOUND",
 			wantDeleteArgs: []deleteCall{
@@ -74,7 +75,7 @@ func TestPetService_DeletePet(t *testing.T) {
 			petName: "pets/fido",
 			etag:    "stale",
 			store: stubStore{
-				deleteErr: &petstore.AbortedError{Message: "etag mismatch"},
+				deleteErr: &pet.AbortedError{Message: "etag mismatch"},
 			},
 			wantCode: "ABORTED",
 			wantDeleteArgs: []deleteCall{
@@ -99,14 +100,14 @@ func TestPetService_DeletePet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			store := tc.store
-			srv := petstore.PetService{Store: &store}
+			srv := service.PetService{Store: &store}
 
 			err := srv.DeletePet(context.Background(), tc.petName, tc.etag)
 
 			assert.Equal(t, tc.wantDeleteArgs, store.deleteCalls, "Store.Delete args")
 			if tc.wantCode != "" {
 				require.Error(t, err)
-				var known petstore.KnownError
+				var known pet.KnownError
 				require.True(t, errors.As(err, &known), "error MUST be KnownError, got %T: %v", err, err)
 				assert.Equal(t, tc.wantCode, known.Code())
 				return

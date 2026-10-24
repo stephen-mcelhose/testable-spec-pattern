@@ -1,4 +1,4 @@
-package petstore_test
+package service_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	petstore "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 )
 
 // TestPetService_ListPets covers ListPets against AIP-132 / AIP-158 behaviours we claim:
@@ -22,10 +23,10 @@ func TestPetService_ListPets(t *testing.T) {
 	type testCase struct {
 		name string
 
-		req   petstore.ListPetsRequest
+		req   pet.ListPetsRequest
 		store stubStore
 
-		want         petstore.ListPetsResponse
+		want         pet.ListPetsResponse
 		wantCode     string
 		wantListArgs []listCall
 	}
@@ -33,7 +34,7 @@ func TestPetService_ListPets(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "MUST return InvalidArgument when page_size is negative",
-			req: petstore.ListPetsRequest{
+			req: pet.ListPetsRequest{
 				PageSize: -1,
 			},
 			wantCode:     "INVALID_ARGUMENT",
@@ -42,36 +43,36 @@ func TestPetService_ListPets(t *testing.T) {
 		{
 			// AIP-132: unspecified / 0 → documented default (50).
 			name: "MUST use the default page_size when page_size is unspecified",
-			req:  petstore.ListPetsRequest{},
+			req:  pet.ListPetsRequest{},
 			store: stubStore{
-				listPets: []petstore.Pet{},
+				listPets: []pet.Pet{},
 			},
-			want: petstore.ListPetsResponse{
-				Pets: []petstore.Pet{},
+			want: pet.ListPetsResponse{
+				Pets: []pet.Pet{},
 			},
 			wantListArgs: []listCall{{pageSize: 50}},
 		},
 		{
 			// AIP-132: values above the maximum are coerced to the maximum (not INVALID_ARGUMENT).
 			name: "MUST coerce page_size above the maximum to the maximum",
-			req:  petstore.ListPetsRequest{PageSize: 101},
+			req:  pet.ListPetsRequest{PageSize: 101},
 			store: stubStore{
-				listPets: []petstore.Pet{},
+				listPets: []pet.Pet{},
 			},
-			want: petstore.ListPetsResponse{
-				Pets: []petstore.Pet{},
+			want: pet.ListPetsResponse{
+				Pets: []pet.Pet{},
 			},
 			wantListArgs: []listCall{{pageSize: 100}},
 		},
 		{
 			name: "MUST return the stored page and next_page_token for a valid ListPetsRequest",
-			req:  petstore.ListPetsRequest{PageSize: 10, PageToken: "t0"},
+			req:  pet.ListPetsRequest{PageSize: 10, PageToken: "t0"},
 			store: stubStore{
-				listPets: []petstore.Pet{{Name: "pets/fido", DisplayName: "Fido"}},
+				listPets: []pet.Pet{{Name: "pets/fido", DisplayName: "Fido"}},
 				listNext: "t1",
 			},
-			want: petstore.ListPetsResponse{
-				Pets:          []petstore.Pet{{Name: "pets/fido", DisplayName: "Fido"}},
+			want: pet.ListPetsResponse{
+				Pets:          []pet.Pet{{Name: "pets/fido", DisplayName: "Fido"}},
 				NextPageToken: "t1",
 			},
 			wantListArgs: []listCall{{pageSize: 10, pageToken: "t0"}},
@@ -79,18 +80,18 @@ func TestPetService_ListPets(t *testing.T) {
 		{
 			// Empty collection is success — not NOT_FOUND.
 			name: "MUST return an empty page when there are no pets",
-			req:  petstore.ListPetsRequest{PageSize: 10},
+			req:  pet.ListPetsRequest{PageSize: 10},
 			store: stubStore{
 				listPets: nil,
 			},
-			want: petstore.ListPetsResponse{
-				Pets: []petstore.Pet{},
+			want: pet.ListPetsResponse{
+				Pets: []pet.Pet{},
 			},
 			wantListArgs: []listCall{{pageSize: 10}},
 		},
 		{
 			name: "MUST return Internal when list fails for a non-domain reason",
-			req:  petstore.ListPetsRequest{PageSize: 10},
+			req:  pet.ListPetsRequest{PageSize: 10},
 			store: stubStore{
 				listErr: errors.New("connection refused"),
 			},
@@ -103,17 +104,17 @@ func TestPetService_ListPets(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			store := tc.store
-			srv := petstore.PetService{Store: &store}
+			srv := service.PetService{Store: &store}
 
 			got, err := srv.ListPets(context.Background(), tc.req)
 
 			assert.Equal(t, tc.wantListArgs, store.listCalls, "Store.List args")
 			if tc.wantCode != "" {
 				require.Error(t, err)
-				var known petstore.KnownError
+				var known pet.KnownError
 				require.True(t, errors.As(err, &known), "error MUST be KnownError, got %T: %v", err, err)
 				assert.Equal(t, tc.wantCode, known.Code())
-				assert.Equal(t, petstore.ListPetsResponse{}, got)
+				assert.Equal(t, pet.ListPetsResponse{}, got)
 				return
 			}
 			require.NoError(t, err)

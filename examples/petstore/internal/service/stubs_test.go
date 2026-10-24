@@ -1,26 +1,26 @@
-package petstore_test
+package service_test
 
 import (
 	"context"
 
-	petstore "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 )
 
 // stubStore records Store calls so specs can assert the leaf boundary.
 // Prefer counterfeiter when the interface is package-owned and you want generate-fakes.
 type stubStore struct {
-	createPet petstore.Pet
+	createPet pet.Pet
 	createErr error
-	getPet    petstore.Pet
+	getPet    pet.Pet
 	getErr    error
-	updatePet petstore.Pet
+	updatePet pet.Pet
 	updateErr error
 	deleteErr error
-	listPets  []petstore.Pet
+	listPets  []pet.Pet
 	listNext  string
 	listErr   error
 
-	createCalls []petstore.Pet
+	createCalls []pet.Pet
 	getCalls    []string
 	updateCalls []updateCall
 	deleteCalls []deleteCall
@@ -28,7 +28,7 @@ type stubStore struct {
 }
 
 type updateCall struct {
-	pet  petstore.Pet
+	pet  pet.Pet
 	etag string
 }
 
@@ -42,17 +42,17 @@ type listCall struct {
 	pageToken string
 }
 
-func (s *stubStore) Create(_ context.Context, p petstore.Pet) (petstore.Pet, error) {
+func (s *stubStore) Create(_ context.Context, p pet.Pet) (pet.Pet, error) {
 	s.createCalls = append(s.createCalls, p)
 	return s.createPet, s.createErr
 }
 
-func (s *stubStore) Get(_ context.Context, name string) (petstore.Pet, error) {
+func (s *stubStore) Get(_ context.Context, name string) (pet.Pet, error) {
 	s.getCalls = append(s.getCalls, name)
 	return s.getPet, s.getErr
 }
 
-func (s *stubStore) Update(_ context.Context, p petstore.Pet, etag string) (petstore.Pet, error) {
+func (s *stubStore) Update(_ context.Context, p pet.Pet, etag string) (pet.Pet, error) {
 	s.updateCalls = append(s.updateCalls, updateCall{pet: p, etag: etag})
 	return s.updatePet, s.updateErr
 }
@@ -62,7 +62,7 @@ func (s *stubStore) Delete(_ context.Context, name, etag string) error {
 	return s.deleteErr
 }
 
-func (s *stubStore) List(_ context.Context, pageSize int32, pageToken string) ([]petstore.Pet, string, error) {
+func (s *stubStore) List(_ context.Context, pageSize int32, pageToken string) ([]pet.Pet, string, error) {
 	s.listCalls = append(s.listCalls, listCall{pageSize: pageSize, pageToken: pageToken})
 	return s.listPets, s.listNext, s.listErr
 }

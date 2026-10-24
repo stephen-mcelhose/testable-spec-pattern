@@ -1,4 +1,4 @@
-package petstore
+package pet
 
 // Pet is the resource entity managed by PetService.
 type Pet struct {
