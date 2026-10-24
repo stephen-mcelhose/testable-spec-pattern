@@ -48,6 +48,14 @@ service UserService {
     option (google.api.http) = {delete: "/v1/{name=users/*}"};
     option (google.api.method_signature) = "name";
   }
+
+  // Creates multiple users in a single request. Atomic: all succeed or all fail.
+  rpc BatchCreateUsers(BatchCreateUsersRequest) returns (BatchCreateUsersResponse) {
+    option (google.api.http) = {
+      post: "/v1/users:batchCreate"
+      body: "*"
+    };
+  }
 }
 
 // ListUsersRequest is the request for ListUsers.
@@ -109,6 +117,19 @@ message DeleteUserRequest {
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "petstore.example.com/User"}
   ];
+}
+
+// BatchCreateUsersRequest is the request for BatchCreateUsers.
+message BatchCreateUsersRequest {
+  // The requests specifying the users to create.
+  // A maximum of 1000 users can be created in a batch.
+  repeated CreateUserRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// BatchCreateUsersResponse is the response for BatchCreateUsers.
+message BatchCreateUsersResponse {
+  // The users that were created, in the same order as the request.
+  repeated User users = 1;
 }
 
 // User is an account in the petstore.
