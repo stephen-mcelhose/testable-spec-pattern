@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I need to design a REST API for managing inventory items. Each item belongs to a warehouse. How should I structure the resource hierarchy and what methods do I need?",
+    "should_trigger": true
+  },
+  {
+    "query": "Review this proto file for AIP compliance — am I doing the resource names right?",
+    "should_trigger": true
+  },
+  {
+    "query": "Should I use a custom method or a standard Update for this operation that transitions an order to 'shipped' state?",
+    "should_trigger": true
+  },
+  {
+    "query": "What's the difference between OUTPUT_ONLY and REQUIRED field behaviors in a proto API?",
+    "should_trigger": true
+  },
+  {
+    "query": "I have a CreateUser RPC — do I need a user_id field? Where does it go?",
+    "should_trigger": true
+  },
+  {
+    "query": "How should I name the field that holds a reference to another resource? I have a shelf that holds books.",
+    "should_trigger": true
+  },
+  {
+    "query": "Is PUT or PATCH the right HTTP verb for my update endpoint?",
+    "should_trigger": true
+  },
+  {
+    "query": "My proto has PetStatus as a top-level enum — is that the right pattern for lifecycle states?",
+    "should_trigger": true
+  },
+  {
+    "query": "How do I add pagination to a List RPC? What fields go in the request and response?",
+    "should_trigger": true
+  },
+  {
+    "query": "AIP compliant design for a notification service — users can subscribe to topics and receive messages",
+    "should_trigger": true
+  },
+  {
+    "query": "Write unit tests for my UserService Go implementation",
+    "should_trigger": false
+  },
+  {
+    "query": "Parse this JSON response and extract the nested fields into a flat structure",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I set up a gRPC server in Go and handle connection pooling?",
+    "should_trigger": false
+  },
+  {
+    "query": "What's the best way to handle database transactions in a microservice?",
+    "should_trigger": false
+  },
+  {
+    "query": "I need to design an API — should I use REST or GraphQL for this use case?",
+    "should_trigger": false
+  },
+  {
+    "query": "Generate OpenAPI spec from my existing Go handler functions",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I use buf to compile proto files and generate Go code?",
+    "should_trigger": false
+  },
+  {
+    "query": "My HTTP endpoint returns 404 when the resource doesn't exist — is that the right status code?",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I structure a proto file with multiple services?",
+    "should_trigger": false
+  },
+  {
+    "query": "Review my API for rate limiting and auth — am I handling tokens correctly?",
+    "should_trigger": false
+  }
+]

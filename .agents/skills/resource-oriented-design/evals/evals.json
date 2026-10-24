@@ -1,13 +1,14 @@
 {
   "skill_name": "resource-oriented-design",
-  "description": "Exhaustive AIP compliance evals for the resource-oriented-design skill. One eval per AIP. Each assertion maps to a specific RFC 2119 normative requirement (MUST / MUST NOT / SHOULD / SHOULD NOT) that is structurally observable in a proto definition. Behavioral requirements (server error codes, runtime semantics, token opacity) are excluded — they cannot be verified from the proto alone.",
+  "description": "Exhaustive AIP compliance evals for the resource-oriented-design skill. One eval per AIP. Each expectation maps to a specific RFC 2119 normative requirement (MUST / MUST NOT / SHOULD / SHOULD NOT) that is structurally observable in a proto definition. Behavioral requirements (server error codes, runtime semantics, token opacity) are excluded — they cannot be verified from the proto alone.",
   "reference_domain": "Library API (Publishers → Books) — Google's canonical AIP reference domain. See https://google.aip.dev/",
   "evals": [
     {
-      "id": "aip-122-resource-names",
+      "id": 1,
       "spec": "https://google.aip.dev/122",
       "prompt": "Define the resource name scheme for a Book resource in a Library API. Books belong to Publishers. Show the proto message definition for Book and the relevant request message fields for a method that acts on a book.",
-      "assertions": [
+      "expected_output": "A Book resource message with correct resource name field, google.api.resource annotation, and request messages with resource_reference on name fields. Cross-resource fields named without _name suffix.",
+      "expectations": [
         "The Book resource message has a field called `name` of type `string` — MUST: resource name field must be type string and named `name`",
         "The `name` field is the first field in the Book message — SHOULD: first field should be the resource name",
         "The `name` field on the Book resource is NOT called anything other than `name` — MUST NOT: fields must not be called `name` except for the resource name of that specific resource",
@@ -20,7 +21,6 @@
         "Non-terminal name segments do NOT contain a `/` character — MUST NOT",
         "Resource IDs do NOT use upper-case letters — SHOULD NOT",
         "All resource ID fields exposed separately (e.g., `book_id`) are of type `string`, not integer — SHOULD: all ID fields should be strings",
-        "If a separate resource ID field (e.g., `book_id`) is exposed, it is annotated `OUTPUT_ONLY` — MUST",
         "The Book resource message has a `(google.api.resource)` annotation — SHOULD",
         "In request messages acting on an existing book (Get, Update, Delete), the first field is `string name` — MUST: action request field must be type string and called `name`",
         "In List-style request messages, the first field is `string parent` of type `string` — SHOULD",
@@ -28,42 +28,31 @@
         "The `parent` field in collection request messages is annotated with `(google.api.resource_reference)` referencing the parent resource type — SHOULD",
         "Fields are NOT named `parent` except to represent a resource's parent collection — SHOULD NOT",
         "The Book resource does NOT expose tuples, self-links, or other forms of resource identification — only the `name` string field identifies the resource — MUST NOT (AIP-122)",
-        "If a system-generated unique ID field (`uid`) is present on the resource, it is annotated `OUTPUT_ONLY` — MUST (AIP-122)",
-        "Collection identifiers within a single resource name pattern are unique — e.g., `people/{person}/people/{person2}` is invalid — MUST (AIP-122)",
-        "Fields that reference another resource use that resource message's name in snake_case — e.g., a field referencing `Publisher` is named `publisher`, not `publisherId` — SHOULD (AIP-122)",
-        "Fields referencing another resource do NOT use a `_name` suffix unless the field would be ambiguous without it — e.g., `publisher` not `publisher_name` — SHOULD NOT (AIP-122)",
-        "Fields referencing another resource are of type `string` (holding the resource name), NOT of the message type that implements the resource — SHOULD NOT (AIP-122)"
+        "Collection IDs are unique within a name pattern — no two segments have the same collection ID — MUST",
+        "Any cross-resource reference fields are named after the resource type in snake_case WITHOUT a `_name` suffix — e.g., `shelf` not `shelf_name` — SHOULD NOT (AIP-122)"
       ]
     },
     {
-      "id": "aip-123-resource-types",
+      "id": 2,
       "spec": "https://google.aip.dev/123",
-      "prompt": "Define resource type annotations for Book and Publisher resources in a Library API using `google.api.resource`. The service name is `library.googleapis.com`.",
-      "assertions": [
-        "Each resource has a `(google.api.resource)` annotation with a `type` field — MUST: API must define a resource type for each resource",
-        "The `type` value follows the pattern `{ServiceName}/{Type}` — e.g., `library.googleapis.com/Book` — MUST",
-        "The type name (after the `/`) starts with an uppercase letter — MUST",
-        "The type name uses PascalCase / UpperCamelCase — MUST",
-        "The type name is the singular form of the noun: `Book` not `Books` — MUST",
-        "The type name contains only alphanumeric characters — MUST",
-        "The `(google.api.resource)` annotation has a `pattern` field — e.g., `publishers/{publisher}/books/{book}` — MUST: patterns must correspond to the resource name",
-        "Pattern variables (segments within braces) use snake_case — e.g., `{book}`, not `{bookId}` or `{bookID}` — MUST",
-        "Pattern variables conform to `[a-z][_a-z0-9]*[a-z0-9]` format — MUST",
-        "Pattern variables do NOT use an `_id` suffix — `{book}` not `{book_id}` — MUST NOT",
-        "Pattern variables are unique within any given pattern — e.g., `publishers/{publisher}/books/{publisher}` would be invalid — MUST",
-        "Pattern variables are the singular form of the resource type — e.g., `{book}` for a Book resource — MUST",
-        "Pattern collection identifier segments match the plural of the resource — `books` in `publishers/{publisher}/books/{book}` — MUST",
-        "The `singular` value in the resource annotation is lower camelCase of the type — e.g., `book` — MUST",
-        "The `plural` value in the resource annotation is lower camelCase plural — e.g., `books` — MUST",
-        "If multiple patterns are defined, they are mutually unique (identical structure once resource ID segments are removed) — MUST",
+      "prompt": "Define the resource type annotation for a Book resource in a Library API. Books belong to Publishers with the pattern `publishers/{publisher}/books/{book}`. The API service hostname is `library.googleapis.com`. Show the full `google.api.resource` annotation.",
+      "expected_output": "A google.api.resource annotation with correct type (service/Type format), pattern, singular, and plural fields.",
+      "expectations": [
+        "The `type` field in `google.api.resource` follows the format `{Service}/{Type}` — e.g., `library.googleapis.com/Book` — MUST",
+        "The `pattern` field in `google.api.resource` matches the expected name pattern — e.g., `publishers/{publisher}/books/{book}` — MUST",
+        "The `type` field uses the full service domain — e.g., `library.googleapis.com` not just `library` — MUST",
+        "The `type` field's Type component is in UpperCamelCase — e.g., `Book` not `book` — MUST",
+        "The `singular` field in `google.api.resource` is the singular form of the resource noun — e.g., `book` — SHOULD",
+        "The `plural` field in `google.api.resource` is the plural form of the resource noun — e.g., `books` — SHOULD",
         "Existing patterns are NOT removed or re-ordered if new patterns are added — MUST NOT: breaks client library backward compatibility"
       ]
     },
     {
-      "id": "aip-131-get",
+      "id": 3,
       "spec": "https://google.aip.dev/131",
       "prompt": "Design a GetBook RPC for a Library API. Books have the resource name pattern `publishers/{publisher}/books/{book}`. Include the full proto RPC definition, request message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "A GetBook RPC with GetBookRequest containing a required name field with resource_reference, HTTP GET annotation, and method_signature of 'name'.",
+      "expectations": [
         "The RPC name begins with `Get` — e.g., `GetBook` — MUST",
         "The request message name matches the RPC name with a `Request` suffix — e.g., `GetBookRequest` — MUST",
         "The response message is the resource itself (`Book`), NOT a `GetBookResponse` wrapper message — MUST",
@@ -84,10 +73,11 @@
       ]
     },
     {
-      "id": "aip-132-list",
+      "id": 4,
       "spec": "https://google.aip.dev/132 + https://google.aip.dev/158 + https://google.aip.dev/160",
       "prompt": "Design a ListBooks RPC for a Library API. Books belong to Publishers (pattern: `publishers/{publisher}/books/{book}`). Include pagination (AIP-158) and a filter field (AIP-160). Include the full proto RPC, request message, response message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "A ListBooks RPC with ListBooksRequest (parent, page_size, page_token, filter) and ListBooksResponse (repeated books, next_page_token). HTTP GET, method_signature of 'parent'.",
+      "expectations": [
         "The RPC name begins with `List` — e.g., `ListBooks` — MUST (AIP-132)",
         "The request message name matches the RPC name with a `Request` suffix — e.g., `ListBooksRequest` — MUST (AIP-132)",
         "The response message name matches the RPC name with a `Response` suffix — e.g., `ListBooksResponse` — MUST (AIP-132)",
@@ -117,10 +107,11 @@
       ]
     },
     {
-      "id": "aip-133-create",
+      "id": 5,
       "spec": "https://google.aip.dev/133",
       "prompt": "Design a CreateBook RPC for a Library API. Books belong to Publishers. Include the full proto RPC definition, request message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "A CreateBook RPC with CreateBookRequest (parent REQUIRED, Book book REQUIRED, optional book_id), HTTP POST, method_signature 'parent,book,book_id'. Book.name is IDENTIFIER.",
+      "expectations": [
         "The RPC name begins with `Create` — e.g., `CreateBook` — MUST",
         "The request message name matches the RPC name with a `Request` suffix — e.g., `CreateBookRequest` — MUST",
         "The response message is the resource itself (`Book`), NOT a `CreateBookResponse` wrapper — MUST",
@@ -138,25 +129,24 @@
         "The URI path maps to the collection — e.g., `publishers/{publisher}/books` — SHOULD",
         "The `parent` field is the only variable in the URI path — SHOULD",
         "A `book_id` field of type `string` exists on the request message — SHOULD (management plane)",
-        "There is exactly one `(google.api.method_signature)` annotation — SHOULD",
-        "The `name` field on the `Book` resource is annotated `OUTPUT_ONLY` — the server assigns it; it MUST be ignored on creation — MUST",
-        "The request message does NOT contain other optional fields except those described in AIP-133 or another AIP — SHOULD NOT",
-        "If the CreateBook RPC is long-running, the response message is `google.longrunning.Operation` (not `Book` directly) — MUST (AIP-133)",
-        "If using a long-running create, the `google.longrunning.operation_info` annotation specifies both `response_type` (the resource type) and `metadata_type` — MUST (AIP-133)"
+        "The `(google.api.method_signature)` annotation includes both the resource field AND the resource_id — e.g., `\"parent,book,book_id\"` — SHOULD",
+        "The `name` field on the `Book` resource is annotated `IDENTIFIER` (not `OUTPUT_ONLY`) — MUST: the server assigns the name; IDENTIFIER is the correct behavior for a resource's own name field",
+        "The request message does NOT contain other optional fields except those described in AIP-133 or another AIP — SHOULD NOT"
       ]
     },
     {
-      "id": "aip-134-update",
+      "id": 6,
       "spec": "https://google.aip.dev/134",
       "prompt": "Design an UpdateBook RPC for a Library API supporting partial resource update. Include the full proto RPC definition, request message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "An UpdateBook RPC with UpdateBookRequest (Book book REQUIRED, FieldMask update_mask OPTIONAL), HTTP PATCH, method_signature 'book,update_mask'. Book.name is IDENTIFIER with no self-referential resource_reference.",
+      "expectations": [
         "The RPC name begins with `Update` — e.g., `UpdateBook` — MUST",
         "The request message name matches the RPC name with a `Request` suffix — e.g., `UpdateBookRequest` — MUST",
         "The response message is the resource itself (`Book`), NOT an `UpdateBookResponse` wrapper — MUST",
         "The `google.api.http` annotation has a `body` key that maps to the resource field — e.g., `body: \"book\"` — MUST",
         "The request message has a resource field of type `Book` — e.g., `Book book` — MUST",
         "The `Book` resource message has a `name` field — MUST: name field must be included in the resource",
-        "The `name` field on the resource has a `(google.api.resource_reference)` annotation identifying the resource type — MUST",
+        "The `Book.name` field does NOT carry a self-referential `(google.api.resource_reference)` pointing back to the Book type — self-referential resource_reference creates a mutable cycle (AIP-121)",
         "An `update_mask` field of type `google.protobuf.FieldMask` is present in the request message — MUST",
         "The `update_mask` field is called `update_mask` — MUST",
         "The `update_mask` field is NOT required — it is optional — MUST: update_mask must be optional",
@@ -169,16 +159,15 @@
         "The resource field in the request is annotated `(google.api.field_behavior) = REQUIRED` — SHOULD",
         "The `name` field within the resource is called `name` — SHOULD",
         "State fields (server-managed state, not user-settable) are NOT directly writable via the update request — MUST NOT",
-        "The request message does NOT contain other optional fields except those described in AIP-134 or another AIP — SHOULD NOT",
-        "If the UpdateBook RPC is long-running, the response message is `google.longrunning.Operation` (not `Book` directly) — MUST (AIP-134)",
-        "If using a long-running update, the `google.longrunning.operation_info` annotation specifies both `response_type` (the resource type) and `metadata_type` — MUST (AIP-134)"
+        "The request message does NOT contain other optional fields except those described in AIP-134 or another AIP — SHOULD NOT"
       ]
     },
     {
-      "id": "aip-135-delete",
+      "id": 7,
       "spec": "https://google.aip.dev/135",
       "prompt": "Design a DeleteBook RPC for a Library API. Include the full proto RPC definition, request message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "A DeleteBook RPC with DeleteBookRequest (name REQUIRED with resource_reference), HTTP DELETE, response google.protobuf.Empty, method_signature 'name'.",
+      "expectations": [
         "The RPC name begins with `Delete` — e.g., `DeleteBook` — MUST",
         "The request message name matches the RPC name with a `Request` suffix — e.g., `DeleteBookRequest` — MUST",
         "The `google.api.http` annotation specifies HTTP verb `DELETE` — MUST",
@@ -195,16 +184,15 @@
         "All remaining fields map to URI query parameters — SHOULD",
         "There is exactly one `(google.api.method_signature)` annotation with value `\"name\"` — SHOULD",
         "The comment on the `name` field documents the resource pattern — SHOULD",
-        "The request message does NOT contain other optional fields except those described in AIP-135 or another AIP — SHOULD NOT",
-        "If the DeleteBook RPC is long-running, the response message is `google.longrunning.Operation` (not `google.protobuf.Empty` directly) — MUST (AIP-135)",
-        "If using a long-running delete, the `google.longrunning.operation_info` annotation specifies both `response_type` and `metadata_type` — MUST (AIP-135)"
+        "The request message does NOT contain other optional fields except those described in AIP-135 or another AIP — SHOULD NOT"
       ]
     },
     {
-      "id": "aip-136-custom-methods",
+      "id": 8,
       "spec": "https://google.aip.dev/136",
       "prompt": "Design an ArchiveBook custom method for a Library API. Archiving a book mutates its state (marks it as archived). It operates on a specific book resource. Include the full proto RPC definition, request message, response message, and HTTP annotation.",
-      "assertions": [
+      "expected_output": "An ArchiveBook RPC with ArchiveBookRequest (name REQUIRED), ArchiveBookResponse, HTTP POST with :archive verb, body '*', method_signature 'name'.",
+      "expectations": [
         "The HTTP method in the `google.api.http` annotation is `POST` — MUST: POST must be used when the method has side effects or mutates resources",
         "The URI uses a `:` character followed by the custom verb — e.g., `/publishers/{publisher}/books/{book}:archive` — MUST",
         "The verb in the URI matches the verb portion of the RPC name in camelCase — e.g., RPC `ArchiveBook` → URI verb `archive` — MUST",
@@ -216,11 +204,28 @@
         "The RPC name is a verb followed by a noun — e.g., `ArchiveBook` — SHOULD",
         "The `body` clause in the `google.api.http` annotation is `\"*\"` — SHOULD (for POST custom methods)",
         "The request message matches the RPC name with a `Request` suffix — e.g., `ArchiveBookRequest` — SHOULD",
-        "The response message matches the RPC name with a `Response` suffix — e.g., `ArchiveBookResponse` — or is the resource itself — SHOULD",
-        "If the custom method only retrieves data or resource state (no side effects), the HTTP method is `GET` not `POST` — MUST (AIP-136)",
-        "If the custom method operates on a collection (not a single resource) and the collection's resource has a parent, the parent parameter is called `parent` and is the only variable in the URI path — MUST (AIP-136)",
-        "If the custom method operates on a collection, the collection key in the URI is a literal string (not a variable) — MUST (AIP-136)",
-        "If the custom method is stateless and involves billing, the HTTP method is `POST` — MUST (AIP-136)"
+        "The response message matches the RPC name with a `Response` suffix — e.g., `ArchiveBookResponse` — or is the resource itself — SHOULD"
+      ]
+    },
+    {
+      "id": 9,
+      "spec": "https://google.aip.dev/203 + https://google.aip.dev/216 + https://google.aip.dev/142 + https://google.aip.dev/148 + https://google.aip.dev/191",
+      "prompt": "Define a Book resource message for a Library API. Books have: a lifecycle state (available, checked_out, archived), a creation timestamp, a cross-reference to a Shelf resource (the book's current location), and the author's full name. Apply all required AIP annotations.",
+      "expected_output": "A Book message with all fields annotated with field_behavior, a State enum nested inside Book (not top-level), STATE_UNSPECIFIED = 0 with doc comments, create_time (not create_date), given_name/family_name (not first_name/last_name), shelf field with resource_reference (not shelf_name). Service definition before message definitions.",
+      "expectations": [
+        "Every field on the Book resource has at least one `(google.api.field_behavior)` annotation — MUST (AIP-203)",
+        "The `name` field is annotated `IDENTIFIER` — MUST (AIP-203): IDENTIFIER is the correct behavior for a resource's own name field",
+        "Server-assigned fields such as `create_time` are annotated `OUTPUT_ONLY` — MUST (AIP-203)",
+        "User-settable fields are annotated `OPTIONAL` or `REQUIRED`, NOT `OUTPUT_ONLY` — MUST (AIP-203)",
+        "The lifecycle state is modeled as an enum named `State` nested INSIDE the `Book` message — SHOULD (AIP-216): prefer nested enum named State over top-level BookStatus/BookState",
+        "The nested `State` enum's zero value is named `STATE_UNSPECIFIED` — MUST (AIP-126): zero value must follow {EnumName}_UNSPECIFIED pattern",
+        "All enum values including `STATE_UNSPECIFIED` have doc comments — MUST (AIP-192)",
+        "The creation timestamp field name ends in `_time` — e.g., `create_time` not `create_date` — MUST (AIP-142)",
+        "The author's given name field is named `given_name`, NOT `first_name` — MUST (AIP-148)",
+        "The author's family name field is named `family_name`, NOT `last_name` — MUST (AIP-148)",
+        "The cross-reference to Shelf is a `string` field named `shelf` (the resource type in snake_case), NOT `shelf_name` — SHOULD NOT (AIP-122): _name suffix on cross-resource fields is discouraged",
+        "The `shelf` cross-reference field has a `(google.api.resource_reference)` annotation — SHOULD (AIP-122)",
+        "The service definition appears BEFORE message definitions in the .proto file — SHOULD (AIP-191)"
       ]
     }
   ]
