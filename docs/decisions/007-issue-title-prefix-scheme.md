@@ -17,7 +17,7 @@ Accepted — Verb-first imperative (Option 2)
 The `write-issue` skill encodes a title formula:
 
 ```
-<type>: <domain-artifact> — <specific-change>
+<type>: <domain-artifact> - <specific-change>
 ```
 
 The `<type>` prefix is the first token a reader sees when scanning `gh issue list`. It signals the nature of the work before anything else is read. The choice of prefix scheme has consequences for:
@@ -55,14 +55,14 @@ Drawn from the [Conventional Commits](https://www.conventionalcommits.org/) spec
 No explicit type token. The title begins with a strong imperative verb. The verb *is* the type signal.
 
 ```
-Define billing Invoice proto — AIP-compliant resource with standard CRUD methods
-Wire BillingService.CreateInvoice RPC — implementation to generated proto types
-Implement orders-created Kafka consumer — with dead-letter queue on processing failure
-Fix shipping Shipment proto — correct State enum nesting per AIP-216
-Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff
+Define billing Invoice proto - AIP-compliant resource with standard CRUD methods
+Wire BillingService.CreateInvoice RPC - implementation to generated proto types
+Implement orders-created Kafka consumer - with dead-letter queue on processing failure
+Fix shipping Shipment proto - correct State enum nesting per AIP-216
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff
 ```
 
-Imperative mood is a well-established convention for **commit messages** — Git's own documentation and Chris Beams' widely-cited post ([cbea.ms/git-commit](https://cbea.ms/git-commit/)) both prescribe it. Its application to *issue titles* is by analogy, not by documented standard. No citable specification for verb-first issue titles was found.
+Imperative mood is a well-established convention for **commit messages**. It appears in Git's own contributor guidelines (`Documentation/SubmittingPatches` in the git source tree: *"Describe your changes in imperative mood… as if you are giving commands to the codebase"*), the Linux kernel submitting-patches guide ([kernel.org](https://www.kernel.org/doc/html/latest/process/submitting-patches.html)), and Chris Beams' widely-cited post ([cbea.ms/git-commit](https://cbea.ms/git-commit/)). It does not appear in the main `git-commit` man page. Its application to *issue titles* is by analogy — no citable specification for verb-first issue titles was found.
 
 **What it expresses:** the action being taken. Readers scan the verb to triage.
 
@@ -94,9 +94,9 @@ Without discipline, verb choice is inconsistent (Add vs Implement vs Wire — me
 `[feature]` `[bug]` `[task]` `[spike]` `[doc]` `[refactor]`
 
 ```
-[feature] BillingService.CreateInvoice RPC — wire implementation to generated proto types
-[spike] orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff
-[doc] ADR-008 — adopt buf as proto enforcement gate
+[feature] BillingService.CreateInvoice RPC - wire implementation to generated proto types
+[spike] orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff
+[doc] ADR-008 - adopt buf as proto enforcement gate
 ```
 
 Common in Jira-heavy environments and teams that treat issue type as a formal field separate from the title text.
@@ -118,8 +118,8 @@ Two prefixes only. Everything else is expressed in the artifact and the action v
 `deliver:` `explore:`
 
 ```
-deliver: BillingService.CreateInvoice RPC — wire implementation to generated proto types
-explore: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff strategy
+deliver: BillingService.CreateInvoice RPC - wire implementation to generated proto types
+explore: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff strategy
 ```
 
 The single most useful distinction on a kanban board is whether an issue will produce a committed artefact or a decision/finding. Everything else (feat vs fix vs chore) is secondary and can be inferred from the artifact name and verb.
@@ -141,10 +141,10 @@ The prefix is the **domain area**, not the work type. Area is already encoded in
 `proto:` `grpc:` `kafka:` `pubsub:` `skill:` `docs:` `infra:`
 
 ```
-proto: billing Invoice — define AIP-compliant resource with standard CRUD methods
-grpc: BillingService.CreateInvoice — wire implementation to generated proto types
-skill: write-issue — add title formula and label vocabulary
-docs: ADR-008 — adopt buf as proto enforcement gate
+proto: billing Invoice - define AIP-compliant resource with standard CRUD methods
+grpc: BillingService.CreateInvoice - wire implementation to generated proto types
+skill: write-issue - add title formula and label vocabulary
+docs: ADR-008 - adopt buf as proto enforcement gate
 ```
 
 Used in the Linux kernel (`net:`, `mm:`, `fs:`). The area is the first filter; work type is inferred from the action verb.
@@ -168,14 +168,14 @@ Issue titles begin with a canonical imperative verb from the per-work-class voca
 The title formula becomes:
 
 ```
-<Verb> <domain-artifact> — <specific-change>
+<Verb> <domain-artifact> - <specific-change>
 ```
 
 Examples:
 ```
-Define billing Invoice proto — AIP-compliant resource with standard CRUD methods
-Wire BillingService.CreateInvoice RPC — implementation to generated proto types
-Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff
+Define billing Invoice proto - AIP-compliant resource with standard CRUD methods
+Wire BillingService.CreateInvoice RPC - implementation to generated proto types
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff
 ```
 
 The verb list per work class (see Option 2 above) is the canonical reference. When in doubt, consult it before choosing a verb.

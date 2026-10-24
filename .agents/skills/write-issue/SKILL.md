@@ -20,68 +20,56 @@ Title and labels together are the **discovery contract** for the backlog. The bo
 ### The title formula
 
 ```
-<Verb> <domain-artifact> — <specific-change>
+<Verb> <domain-artifact> - <specific-change>
 ```
 
-The verb leads. It is the type signal — readers scan it to triage without needing a prefix token. The em-dash divides the artifact from the specific action being taken:
-- Left of the em-dash → which artifact in the system
-- Right of the em-dash → what specifically is changing
+The verb leads and must be **imperative mood** — the form that gives an instruction: `Define`, not `Defines` or `Defining`. This is the type signal; readers scan the verb to triage without needing a prefix token. The dash divides the artifact from the specific action being taken:
+- Left of the dash → which artifact in the system
+- Right of the dash → what specifically is changing
 
 `Spike:` is the only permitted prefix, used to keep explorations visually distinct:
 ```
-Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff
 ```
 
 A title must stand alone. A reader cold-scanning `gh issue list` should not need to open the issue to understand the nature of the work.
 
-### Canonical verbs by work class
+### Work-class table
 
-Choose the verb that most precisely describes the action. The verb is the type signal — use the table, don't invent.
+Choose the verb and artifact pattern for the work class. The verb must be imperative mood. If no work class matches, use the General row.
 
-| Work class         | Canonical verbs                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------- |
-| Proto contract     | `Define` (new resource), `Annotate` (field behaviors), `Restructure` (file layout), `Fix` (linter violations) |
-| gRPC method        | `Wire` (impl to generated types), `Spec` (behavioral tests), `Add` (new method), `Fix` (error codes, pagination) |
-| Kafka consumer     | `Implement` (new consumer), `Add` (handler logic), `Fix` (error path/retry)                 |
-| PubSub consumer    | `Implement` (new consumer), `Add` (handler logic), `Fix` (ack/nack strategy)                |
-| Go service / pkg   | `Implement` (new service), `Wire` (dependencies), `Extract` (interface/helper), `Refactor`  |
-| Skill              | `Add` (new guidance), `Update` (existing guidance), `Refactor`                              |
-| ADR / docs         | `Document` (decision/ADR), `Add` (reference doc), `Update`                                  |
-| Investigation      | `Spike:` (prefix, not a verb — keeps explorations visually distinct)                        |
-
-### Artifact naming
-
-The artifact is a domain noun + optional qualifier. Use the most specific name available:
-
-| Work class           | Artifact pattern               | Example                                   |
-| -------------------- | ------------------------------ | ----------------------------------------- |
-| Proto contract       | `<service> <Resource> proto`   | `billing Invoice proto`                   |
-| gRPC method          | `<Service>.<Method> RPC`       | `BillingService.CreateInvoice RPC`        |
-| Go service impl      | `<Resource> service`           | `Invoice service`                         |
-| Behavioral spec      | `<Service>.<Method> spec`      | `BillingService.ListInvoices spec`        |
-| Kafka consumer       | `<topic> Kafka consumer`       | `orders-created Kafka consumer`           |
-| PubSub consumer      | `<topic> PubSub consumer`      | `payment-events PubSub consumer`          |
-| Go library/package   | `<pkg> package`                | `currency package`                        |
-| Skill                | `<skill-name> skill`           | `write-issue skill`                       |
-| ADR / decision doc   | `ADR-<N>`                      | `ADR-007`                                 |
+| Work class          | Canonical verbs                                  | Artifact pattern                  | Example title                                                             |
+| ------------------- | ------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------- |
+| Proto contract      | `Define`, `Annotate`, `Restructure`, `Fix`       | `<service> <Resource> proto`      | `Define billing Invoice proto - AIP-compliant resource with field behaviors` |
+| gRPC method         | `Wire`, `Add`, `Fix`                             | `<Service>.<Method> RPC`          | `Wire BillingService.CreateInvoice RPC - implementation to generated proto types` |
+| Behavioral spec     | `Spec`                                           | `<Service>.<Method> spec`         | `Spec BillingService.ListInvoices - behavioral spec for pagination contract` |
+| Kafka consumer      | `Implement`, `Add`, `Fix`                        | `<topic> Kafka consumer`          | `Implement orders-created Kafka consumer - with dead-letter queue on failure` |
+| PubSub consumer     | `Implement`, `Add`, `Fix`                        | `<topic> PubSub consumer`         | `Implement payment-events PubSub consumer - ack/nack strategy`            |
+| Go service          | `Implement`, `Wire`, `Extract`, `Refactor`       | `<Resource> service`              | `Implement Invoice service - billing domain core logic`                   |
+| Go package          | `Implement`, `Extract`, `Refactor`               | `<pkg> package`                   | `Extract currency package - shared money type from billing service`       |
+| Skill               | `Add`, `Update`, `Refactor`                      | `<skill-name> skill`              | `Update write-issue skill - add verb table and examples`                  |
+| ADR / docs          | `Document`, `Add`, `Update`                      | `ADR-<N>`                         | `Document ADR-007 - adopt verb-first issue titles`                        |
+| Investigation       | `Spike:` (prefix, not a verb)                    | any                               | `Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff` |
+| General (default)   | `Add`, `Update`, `Fix`, `Remove`, `Document`     | any                               | `Add CODEOWNERS file - restrict write access to proto directory`          |
 
 ### Good and bad titles
 
-**Good:**
+**Good** — note how `Spike:` is visually distinct from delivery work:
 ```
-Wire BillingService.CreateInvoice RPC — implementation to generated proto types
-Define billing Invoice proto — AIP-compliant resource with field behaviors
-Update write-issue skill — add titling guidance and verb table
-Spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff strategy
-Document ADR-007 — adopt buf as proto toolchain enforcement gate
-Spec BillingService.ListInvoices — behavioral spec for pagination contract
+Wire BillingService.CreateInvoice RPC - implementation to generated proto types
+Define billing Invoice proto - AIP-compliant resource with field behaviors
+Update write-issue skill - add titling guidance and verb table
+Document ADR-007 - adopt buf as proto toolchain enforcement gate
+Spec BillingService.ListInvoices - behavioral spec for pagination contract
+Add CODEOWNERS file - restrict write access to proto directory
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff strategy
 ```
 
 **Bad:**
 ```
-update billing service             ← no artifact, no specific action
-Improve proto definitions          ← artifact vague, verb too weak
-Investigate Kafka options          ← use Spike: prefix, name the artifact and question
+update billing service             ← lowercase, no artifact, no specific action
+Improve proto definitions          ← artifact vague, verb too weak (use Define/Restructure/Fix)
+Investigate Kafka options          ← use Spike: prefix and name the specific question
 fix things                         ← all three fields missing
 Wire up the thing                  ← artifact unnamed
 ```
@@ -112,7 +100,7 @@ Include `--label` flags in the `gh issue create` command:
 
 ```bash
 gh issue create \
-  --title "feat: BillingService.CreateInvoice RPC — wire implementation to generated proto types" \
+  --title "Wire BillingService.CreateInvoice RPC - implementation to generated proto types" \
   --body-file /tmp/issue.md \
   --label grpc --label spec
 ```
@@ -198,7 +186,7 @@ Before writing anything, identify:
 
 Before drafting the body, lock in the title and labels:
 
-1. **Apply the formula:** `<Verb> <domain-artifact> — <specific-change>`. Choose the verb from the canonical verb table in `## Title and labels`. For investigations, use `Spike:` as a prefix instead.
+1. **Apply the formula:** `<Verb> <domain-artifact> - <specific-change>`. Verb must be imperative mood. Choose verb and artifact pattern from the work-class table in `## Title and labels`. For investigations, use `Spike:` as a prefix instead.
 2. **Check for duplicates:** `gh issue list --search "<key term from the artifact or action>"`. If a related issue exists, note the relationship — either this is a duplicate (stop), or add a dependency reference.
 3. **Pick 1–2 labels** from the vocabulary in `## Title and labels`.
 
@@ -237,7 +225,7 @@ List at least two explicit exclusions. These are things a reasonable implementer
 
 Before presenting the issue, verify every item:
 
-- [ ] Title satisfies the formula: canonical verb (or `Spike:`), named artifact, em-dash, specific change
+- [ ] Title satisfies the formula: imperative verb (or `Spike:`), named artifact, dash, specific change
 - [ ] Single deliverable — no bundled concerns
 - [ ] The "why" is stated (the pain or gap being addressed)
 - [ ] At least one concrete use-case
