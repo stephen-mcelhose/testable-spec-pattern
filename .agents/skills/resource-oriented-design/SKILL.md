@@ -110,6 +110,33 @@ Declarations in a `.proto` file MUST appear in this order:
 4. Resource messages
 5. Enums
 
+## Constraints
+
+Contracts MUST be enforced with annotations, not comments. A comment saying "max 1000 items" is aspirational; an annotation is a contract the runtime can verify.
+
+Use `buf.validate` (protovalidate) for field constraints:
+
+```proto
+import "buf/validate/validate.proto";
+
+repeated CreateBookRequest requests = 1 [
+  (google.api.field_behavior) = REQUIRED,
+  (buf.validate.field).repeated.max_items = 1000
+];
+```
+
+Add `buf.build/bufbuild/protovalidate` to `buf.yaml` deps and run `buf dep update` when introducing this import.
+
+Common constraint annotations:
+
+| Constraint                              | Example value |
+| --------------------------------------- | ------------- |
+| `(buf.validate.field).repeated.max_items` | `1000`      |
+| `(buf.validate.field).repeated.min_items` | `1`         |
+| `(buf.validate.field).string.max_len`   | `256`         |
+| `(buf.validate.field).int32.gte`        | `0`           |
+| `(buf.validate.field).int32.lte`        | `100`         |
+
 ## Comments
 
 Every enum value — including `UNSPECIFIED = 0` — MUST have a doc comment.
