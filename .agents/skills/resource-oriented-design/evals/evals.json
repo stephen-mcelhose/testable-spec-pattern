@@ -26,7 +26,13 @@
         "In List-style request messages, the first field is `string parent` of type `string` — SHOULD",
         "The `name` field in action request messages is annotated with `(google.api.resource_reference)` referencing the Book resource type — SHOULD",
         "The `parent` field in collection request messages is annotated with `(google.api.resource_reference)` referencing the parent resource type — SHOULD",
-        "Fields are NOT named `parent` except to represent a resource's parent collection — SHOULD NOT"
+        "Fields are NOT named `parent` except to represent a resource's parent collection — SHOULD NOT",
+        "The Book resource does NOT expose tuples, self-links, or other forms of resource identification — only the `name` string field identifies the resource — MUST NOT (AIP-122)",
+        "If a system-generated unique ID field (`uid`) is present on the resource, it is annotated `OUTPUT_ONLY` — MUST (AIP-122)",
+        "Collection identifiers within a single resource name pattern are unique — e.g., `people/{person}/people/{person2}` is invalid — MUST (AIP-122)",
+        "Fields that reference another resource use that resource message's name in snake_case — e.g., a field referencing `Publisher` is named `publisher`, not `publisherId` — SHOULD (AIP-122)",
+        "Fields referencing another resource do NOT use a `_name` suffix unless the field would be ambiguous without it — e.g., `publisher` not `publisher_name` — SHOULD NOT (AIP-122)",
+        "Fields referencing another resource are of type `string` (holding the resource name), NOT of the message type that implements the resource — SHOULD NOT (AIP-122)"
       ]
     },
     {
@@ -73,7 +79,8 @@
         "The `name` field is the only variable in the URI path — SHOULD",
         "All remaining request fields map to URI query parameters — SHOULD",
         "There is exactly one `(google.api.method_signature)` annotation with value `\"name\"` — SHOULD",
-        "The comment on the `name` field documents the resource pattern — e.g., `// Format: publishers/{publisher}/books/{book}` — SHOULD"
+        "The comment on the `name` field documents the resource pattern — e.g., `// Format: publishers/{publisher}/books/{book}` — SHOULD",
+        "The request message does NOT contain other optional fields except those described in AIP-131 or another AIP — SHOULD NOT"
       ]
     },
     {
@@ -97,11 +104,14 @@
         "All remaining fields map to URI query parameters — SHOULD (AIP-132)",
         "There is exactly one `(google.api.method_signature)` annotation with value `\"parent\"` — SHOULD (AIP-132)",
         "The response message has a repeated `Book` field as the first field with field number 1 — SHOULD (AIP-132): results field should be first at field number 1",
-        "The request message has an `int32 page_size` field — SHOULD (AIP-158)",
-        "The request message has a `string page_token` field — SHOULD (AIP-158)",
+        "The request message has an `int32 page_size` field — MUST (AIP-132): page_size and page_token must be included on list requests",
+        "The request message has a `string page_token` field — MUST (AIP-132)",
         "The `page_size` field is NOT marked as required — MUST NOT (AIP-158)",
         "The `page_token` field is NOT marked as required — MUST NOT (AIP-158)",
-        "The response message has a `string next_page_token` field — SHOULD (AIP-158)",
+        "The response message has a `string next_page_token` field — MUST (AIP-132): next_page_token must be included on all list response messages",
+        "The response message does NOT include any other repeated fields besides the `Book` results field — SHOULD NOT (AIP-132)",
+        "The ListBooks RPC does NOT use a streaming return type — `stream ListBooksResponse` would violate this — MUST NOT (AIP-158)",
+        "The request message does NOT contain other optional fields except those described in AIP-132 or another AIP — SHOULD NOT (AIP-132)",
         "The request message has exactly one `string filter` field — SHOULD (AIP-160): when providing filtering, request should have exactly one `filter` field",
         "The `filter` field is NOT marked as required — (AIP-160)"
       ]
@@ -130,7 +140,9 @@
         "A `book_id` field of type `string` exists on the request message — SHOULD (management plane)",
         "There is exactly one `(google.api.method_signature)` annotation — SHOULD",
         "The `name` field on the `Book` resource is annotated `OUTPUT_ONLY` — the server assigns it; it MUST be ignored on creation — MUST",
-        "The request message does NOT contain other optional fields except those described in AIP-133 or another AIP — SHOULD NOT"
+        "The request message does NOT contain other optional fields except those described in AIP-133 or another AIP — SHOULD NOT",
+        "If the CreateBook RPC is long-running, the response message is `google.longrunning.Operation` (not `Book` directly) — MUST (AIP-133)",
+        "If using a long-running create, the `google.longrunning.operation_info` annotation specifies both `response_type` (the resource type) and `metadata_type` — MUST (AIP-133)"
       ]
     },
     {
@@ -157,7 +169,9 @@
         "The resource field in the request is annotated `(google.api.field_behavior) = REQUIRED` — SHOULD",
         "The `name` field within the resource is called `name` — SHOULD",
         "State fields (server-managed state, not user-settable) are NOT directly writable via the update request — MUST NOT",
-        "The request message does NOT contain other optional fields except those described in AIP-134 or another AIP — SHOULD NOT"
+        "The request message does NOT contain other optional fields except those described in AIP-134 or another AIP — SHOULD NOT",
+        "If the UpdateBook RPC is long-running, the response message is `google.longrunning.Operation` (not `Book` directly) — MUST (AIP-134)",
+        "If using a long-running update, the `google.longrunning.operation_info` annotation specifies both `response_type` (the resource type) and `metadata_type` — MUST (AIP-134)"
       ]
     },
     {
@@ -181,7 +195,9 @@
         "All remaining fields map to URI query parameters — SHOULD",
         "There is exactly one `(google.api.method_signature)` annotation with value `\"name\"` — SHOULD",
         "The comment on the `name` field documents the resource pattern — SHOULD",
-        "The request message does NOT contain other optional fields except those described in AIP-135 or another AIP — SHOULD NOT"
+        "The request message does NOT contain other optional fields except those described in AIP-135 or another AIP — SHOULD NOT",
+        "If the DeleteBook RPC is long-running, the response message is `google.longrunning.Operation` (not `google.protobuf.Empty` directly) — MUST (AIP-135)",
+        "If using a long-running delete, the `google.longrunning.operation_info` annotation specifies both `response_type` and `metadata_type` — MUST (AIP-135)"
       ]
     },
     {
@@ -200,7 +216,11 @@
         "The RPC name is a verb followed by a noun — e.g., `ArchiveBook` — SHOULD",
         "The `body` clause in the `google.api.http` annotation is `\"*\"` — SHOULD (for POST custom methods)",
         "The request message matches the RPC name with a `Request` suffix — e.g., `ArchiveBookRequest` — SHOULD",
-        "The response message matches the RPC name with a `Response` suffix — e.g., `ArchiveBookResponse` — or is the resource itself — SHOULD"
+        "The response message matches the RPC name with a `Response` suffix — e.g., `ArchiveBookResponse` — or is the resource itself — SHOULD",
+        "If the custom method only retrieves data or resource state (no side effects), the HTTP method is `GET` not `POST` — MUST (AIP-136)",
+        "If the custom method operates on a collection (not a single resource) and the collection's resource has a parent, the parent parameter is called `parent` and is the only variable in the URI path — MUST (AIP-136)",
+        "If the custom method operates on a collection, the collection key in the URI is a literal string (not a variable) — MUST (AIP-136)",
+        "If the custom method is stateless and involves billing, the HTTP method is `POST` — MUST (AIP-136)"
       ]
     }
   ]
