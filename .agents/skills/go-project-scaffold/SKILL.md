@@ -2,7 +2,7 @@
 name: go-project-scaffold
 description: Scaffold a new Go project with idiomatic structure and layout. Use when starting a new Go module, service, or library — or when restructuring an existing project to follow Go conventions. Trigger on "scaffold a Go project", "set up a new Go module", "lay out this Go service", "restructure this Go project".
 license: MIT
-allowed-tools: Read Glob Bash(mkdir:*) Bash(go mod init:*) Bash(go mod tidy:*) Bash(go build:*) Bash(go test:*) Write Edit
+allowed-tools: Read Glob Bash(mkdir:*) Bash(go mod init:*) Bash(go mod tidy:*) Bash(go get:*) Bash(go build:*) Bash(go test:*) Write Edit
 ---
 
 # Go Project Scaffold
@@ -118,7 +118,41 @@ Test files live **alongside** the source they test — not in a separate top-lev
 
 ---
 
-## Step 6 — What NOT to create
+## Step 6 — Scaffold supporting files
+
+### Makefile
+
+Read `references/Makefile` in this skill directory and write its contents to `Makefile` in the module root.
+
+### .gitignore
+
+Read `references/gitignore` in this skill directory and write its contents to `.gitignore` in the module root.
+
+### Test dependencies
+
+Add these two dependencies to every new service or library:
+
+```bash
+go get github.com/stretchr/testify
+go get github.com/maxbrunsfeld/counterfeiter/v6
+```
+
+**testify** (`assert` + `require`) is the preferred assertion library. Use `require` when a failure should stop the test; use `assert` when the test should continue to collect all failures.
+
+**counterfeiter** generates type-safe fakes from interfaces. Use it when you need call-count verification or argument capture beyond what a hand-written stub gives you. Place `//go:generate` directives on the interface declaration:
+
+```go
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Store
+type Store interface { … }
+```
+
+Generated fakes go in a `fakes/` sub-directory alongside the source (e.g. `internal/service/fakes/`). Run `make generate` to regenerate after interface changes.
+
+Hand-written stubs (see `go-behavioral-spec`) are still appropriate for simple cases — use counterfeiter when the interface is large or when test assertions on call behaviour make a hand stub unwieldy.
+
+---
+
+## Step 7 — What NOT to create
 
 | Directory  | Why not                                                               |
 | ---------- | --------------------------------------------------------------------- |
@@ -128,7 +162,7 @@ Test files live **alongside** the source they test — not in a separate top-lev
 
 ---
 
-## Step 7 — Verify
+## Step 8 — Verify
 
 ```bash
 go build ./...
