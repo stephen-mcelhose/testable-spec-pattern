@@ -26,6 +26,7 @@ An emerging pattern in agent-oriented software development (2024–2025). Not at
 **Limitations**
 - Does not capture *why* the work matters. An agent can produce exactly what was tasked without understanding the intent, leading to technically correct but misaligned output.
 - No use-case section — relies on the task description alone, which is often not enough for an agent to infer intent when edge cases arise.
+- Most decisioning is left to the agent. Without a *Why* or use-case, the agent has no basis to resolve ambiguity — it either halts to ask or proceeds on assumption. Both outcomes increase friction.
 
 ---
 
@@ -41,7 +42,7 @@ An emerging pattern in agent-oriented software development (2024–2025). Not at
 
 **Origin and context**
 
-Rooted in requirements engineering practice. The use-case layer bridges the gap between abstract need and testable criteria — a pattern advocated in IEEE 830 (Software Requirements Specifications) and in practitioner literature on acceptance-test-driven development (ATDD). The three-part structure is often used in product management without a formal name.
+Rooted in requirements engineering practice. The use-case layer bridges the gap between abstract need and testable criteria — a pattern advocated in [IEEE 830-1998 (Software Requirements Specifications)](https://ieeexplore.ieee.org/document/720574) and in practitioner literature on [acceptance-test-driven development (ATDD)](https://gojko.net/books/specification-by-example/) (see Gojko Adzic, *Specification by Example*, Manning 2011). The three-part structure is often used in product management without a formal name.
 
 **Strengths**
 - Use-case gives the implementer a concrete mental model, reducing interpretive drift.
@@ -62,7 +63,7 @@ Rooted in requirements engineering practice. The use-case layer bridges the gap 
 
 **Origin and context**
 
-Invented at Intercom (circa mid-2013) by the product and research team led by Paul Adams, while adapting the Jobs-to-be-Done (JTBD) framework to software. The format was officially named "Job Stories" by Alan Klement. Reference: Paul Adams, *"The Dribbblisation of Design"*, Intercom blog (2013); Alan Klement, *"Replacing the User Story with the Job Story"* (2013).
+Invented at Intercom (circa mid-2013) by the product and research team led by Paul Adams, while adapting the Jobs-to-be-Done (JTBD) framework to software. The format was officially named "Job Stories" by Alan Klement. References: [Paul Adams, *"The dribbblisation of design"*, Intercom blog (2013)](https://www.intercom.com/blog/the-dribbblisation-of-design/); [Alan Klement, *"Replacing the User Story with the Job Story"* (2013)](https://medium.com/the-job-to-be-done/replacing-the-user-story-with-the-job-story-af7cdee10c27).
 
 **Strengths**
 - Situation-first framing captures context that "As a [role]" masks. Two users with different demographics but identical situations produce identical job stories.
@@ -73,6 +74,7 @@ Invented at Intercom (circa mid-2013) by the product and research team led by Pa
 - The sentence format is expressive but not structured enough to be a complete issue. Usually requires additional context, acceptance criteria, and scope notes.
 - "When/I want/so I can" can feel grammatically awkward for internal engineering tasks where there is no user persona.
 - Acceptance criteria are absent — must be added as a separate section.
+- "Motivation" and "outcome" blur in practice. "I want to [motivation]" captures the immediate desire; "so I can [outcome]" captures the functional progress sought. Writers often collapse the two — "I want to submit the form so I can submit the form" — restating the same idea twice and removing the layered intent the format is designed to capture.
 
 ---
 
@@ -218,6 +220,50 @@ A pragmatic team-defined template, commonly found in enterprise and product-team
 - "Testing scenarios" and "acceptance criteria" can overlap, creating confusion about which drives implementation and which gates completion.
 - No explicit "out of scope" section — scope creep risk.
 - "Documentation Updated" checkbox in AC conflates delivery with housekeeping.
+
+---
+
+## 9. RFC 2119 Behavioral Language
+
+**Structure**
+
+Acceptance criteria written as normative clauses using the modal vocabulary defined in [IETF RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) (updated for case-sensitivity by [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)):
+
+| Keyword      | Meaning                                                                 |
+| ------------ | ----------------------------------------------------------------------- |
+| **MUST**     | An absolute requirement. Deviation is a conformance failure.            |
+| **MUST NOT** | An absolute prohibition.                                                |
+| **SHOULD**   | Recommended; valid reasons to depart exist but must be understood.      |
+| **MAY**      | Optional; implementations may include or omit.                          |
+
+Applied to acceptance criteria, this replaces plain checkboxes with normative statements:
+
+```
+- The skill MUST produce an issue body that satisfies the Definition of Ready before presenting it.
+- The What section MUST begin with a noun phrase, not a verb.
+- The issue SHOULD include an Out of scope section with at least two explicit exclusions.
+- The issue MAY include a Dependencies section when upstream blockers exist.
+```
+
+**Origin and context**
+
+RFC 2119 was authored by Scott Bradner and published by the IETF in March 1997. Its intent is to give precise, interoperable meaning to the modal verbs used in protocol specifications. RFC 8174 (2017) clarified that the normative keywords apply only in **UPPERCASE** — lowercase "must" and "should" retain their ordinary English meaning. The vocabulary has since been adopted beyond networking: in W3C web standards, OpenAPI specifications, and behavioral testing disciplines (including the `go-behavioral-spec` skill in this repo).
+
+**Strengths**
+- Removes interpretive wiggle room. "The response MUST include an `ETag` header" is unambiguous; "the response should include an ETag header" is not.
+- Directly closes the gap between issue and behavioral spec. If acceptance criteria are already written as `MUST`/`SHOULD`/`MAY` clauses, they translate word-for-word into test assertions — no reinterpretation step required.
+- `SHOULD` and `MAY` make trade-offs explicit. A `SHOULD` criterion signals "this matters but has known exceptions"; a `MAY` signals "optional but valid". Plain checkboxes cannot express this.
+- Well-suited to the preferred format in this repo: the What/Why/Use-case structure provides context; RFC 2119 sharpens the AC section into the same register the behavioral spec uses.
+
+**Limitations**
+- Unfamiliar to many contributors. Teams not versed in standards writing may misuse the keywords — writing `SHOULD` when they mean `MUST`, or using uppercase for emphasis rather than normative intent.
+- Overhead for obvious criteria. "The file MUST be saved as `.md`" adds no precision over a plain checkbox. The keyword form pays off when the criterion involves conditional behaviour, ordering, or known exceptions.
+- Ill-suited to process or tooling issues where the deliverable is not a system behaviour. "The ADR MUST be reviewed by two engineers" is a process rule, not a behavioural assertion — RFC 2119 language works but feels forced.
+- `SHOULD` is frequently misread as weaker than intended. RFC 2119 defines it as "strong recommendation with known exceptions"; contributors often treat it as "nice to have". Usage requires team literacy.
+
+**Relationship to the preferred format**
+
+RFC 2119 language is a refinement of the **Acceptance criteria** section, not a replacement for the full format. It is compatible with What/Why/Use-case/AC/Out-of-scope as-is: the AC section becomes a set of normative `MUST`/`SHOULD`/`MAY` clauses rather than plain checkboxes. This is the natural next step for issues that will feed directly into a behavioral spec or agent workflow — starting in the same register closes the translation gap entirely.
 
 ---
 
