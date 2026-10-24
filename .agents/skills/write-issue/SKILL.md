@@ -7,9 +7,122 @@ allowed-tools: Read Write Bash(gh issue list:*) Bash(gh issue view:*)
 
 # write-issue
 
-Produce a GitHub issue body that a human or agent can pick up cold and deliver without back-and-forth. The output must satisfy the Definition of Ready (see below) before it is presented.
+Produce a GitHub issue — title, labels, and body — that a human or agent can pick up cold and deliver without back-and-forth. The output must satisfy the Definition of Ready (see below) before it is presented.
 
-See `references/issue-patterns.md` for the research behind the format choice.
+See `references/issue-patterns.md` for the research behind the body format choice.
+
+---
+
+## Title and labels
+
+Title and labels together are the **discovery contract** for the backlog. The body is the work contract. Both matter; the title comes first.
+
+### The title formula
+
+```
+<Verb> <domain-artifact> - <specific-change>
+```
+
+The verb leads and must be **imperative mood** — the form that gives an instruction: `Define`, not `Defines` or `Defining`. This is the type signal; readers scan the verb to triage without needing a prefix token. The dash divides the artifact from the specific action being taken:
+- Left of the dash → which artifact in the system
+- Right of the dash → what specifically is changing
+
+`Spike:` is the only permitted prefix, used to keep explorations visually distinct:
+```
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff
+```
+
+A title must stand alone. A reader cold-scanning `gh issue list` should not need to open the issue to understand the nature of the work.
+
+### Work-class table
+
+Choose the verb and artifact pattern for the work class. The verb must be imperative mood. If no work class matches, use the General row.
+
+| Work class          | Canonical verbs                                  | Artifact pattern                  | Example title                                                             |
+| ------------------- | ------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------- |
+| Proto contract      | `Define`, `Annotate`, `Restructure`, `Fix`       | `<service> <Resource> proto`      | `Define billing Invoice proto - AIP-compliant resource with field behaviors` |
+| gRPC method         | `Wire`, `Add`, `Fix`                             | `<Service>.<Method> RPC`          | `Wire BillingService.CreateInvoice RPC - implementation to generated proto types` |
+| Behavioral spec     | `Spec`                                           | `<Service>.<Method> spec`         | `Spec BillingService.ListInvoices - behavioral spec for pagination contract` |
+| Kafka consumer      | `Implement`, `Add`, `Fix`                        | `<topic> Kafka consumer`          | `Implement orders-created Kafka consumer - with dead-letter queue on failure` |
+| PubSub consumer     | `Implement`, `Add`, `Fix`                        | `<topic> PubSub consumer`         | `Implement payment-events PubSub consumer - ack/nack strategy`            |
+| Go service          | `Implement`, `Wire`, `Extract`, `Refactor`       | `<Resource> service`              | `Implement Invoice service - billing domain core logic`                   |
+| Go package          | `Implement`, `Extract`, `Refactor`               | `<pkg> package`                   | `Extract currency package - shared money type from billing service`       |
+| Skill               | `Add`, `Update`, `Refactor`                      | `<skill-name> skill`              | `Update write-issue skill - add verb table and examples`                  |
+| ADR / docs          | `Document`, `Add`, `Update`                      | `ADR-<N>`                         | `Document ADR-007 - adopt verb-first issue titles`                        |
+| Investigation       | `Spike:` (prefix, not a verb)                    | any                               | `Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff` |
+| General (default)   | `Add`, `Update`, `Fix`, `Remove`, `Document`     | any                               | `Add CODEOWNERS file - restrict write access to proto directory`          |
+
+### Good and bad titles
+
+**Good** — note how `Spike:` is visually distinct from delivery work:
+```
+Wire BillingService.CreateInvoice RPC - implementation to generated proto types
+Define billing Invoice proto - AIP-compliant resource with field behaviors
+Update write-issue skill - add titling guidance and verb table
+Document ADR-007 - adopt buf as proto toolchain enforcement gate
+Spec BillingService.ListInvoices - behavioral spec for pagination contract
+Add CODEOWNERS file - restrict write access to proto directory
+Spike: orders-created Kafka consumer - evaluate dead-letter vs retry-with-backoff strategy
+```
+
+**Bad:**
+```
+update billing service             ← lowercase, no artifact, no specific action
+Improve proto definitions          ← artifact vague, verb too weak (use Define/Restructure/Fix)
+Investigate Kafka options          ← use Spike: prefix and name the specific question
+fix things                         ← all three fields missing
+Wire up the thing                  ← artifact unnamed
+```
+
+### Labels
+
+Labels are a second index over the backlog. With strong titles you can search; with labels you can filter without searching. Use 1–2 labels per issue.
+
+**Recommended label vocabulary for backend Go repos:**
+
+| Label     | Covers                                                        |
+| --------- | ------------------------------------------------------------- |
+| `proto`   | Proto file authoring, AIP compliance, buf tooling             |
+| `grpc`    | gRPC service implementation, RPC contracts, generated types   |
+| `kafka`   | Kafka consumer or producer work                               |
+| `pubsub`  | PubSub consumer or producer work                              |
+| `spec`    | Behavioral spec tests                                         |
+| `skill`   | Skill authoring, updates, evaluation                          |
+| `docs`    | Documentation, ADRs, reference material                       |
+| `spike`   | Investigations, feasibility studies, time-boxed research      |
+| `infra`   | Build tooling, CI/CD, Docker, deployment                      |
+
+Teams extend this as their domain grows. The skill teaches the vocabulary; each repo manages its own GitHub labels.
+
+### Filing with labels
+
+Include `--label` flags in the `gh issue create` command:
+
+```bash
+gh issue create \
+  --title "Wire BillingService.CreateInvoice RPC - implementation to generated proto types" \
+  --body-file /tmp/issue.md \
+  --label grpc --label spec
+```
+
+### Discovery patterns
+
+```bash
+# Filter by domain
+gh issue list --label proto
+gh issue list --label grpc
+
+# Full-text search across title + body
+gh issue list --search "CreateInvoice"
+gh issue list --search "AIP-133"
+
+# Multi-label AND
+gh issue list --label proto --label spike
+
+# Formatted output
+gh issue list --label grpc --json number,title,state \
+  | jq -r '.[] | "#\(.number) \(.title)"'
+```
 
 ---
 
@@ -67,9 +180,17 @@ External requirements that must be in place before work can start: upstream issu
 Before writing anything, identify:
 - The **artefact**: what is being built, changed, or fixed? If the topic is vague, ask one clarifying question.
 - The **motivation**: why does this matter? If not stated, infer from context and state your inference explicitly in the Why section so a reviewer can correct it.
-- Whether any **existing issues** cover this topic (`gh issue list` to check for duplicates).
+- Whether any **existing issues** cover this topic — run `gh issue list --search "<key term>"` to check for duplicates before drafting.
 
-### 2. Draft the What
+### 2. Choose a title and labels
+
+Before drafting the body, lock in the title and labels:
+
+1. **Apply the formula:** `<Verb> <domain-artifact> - <specific-change>`. Verb must be imperative mood. Choose verb and artifact pattern from the work-class table in `## Title and labels`. For investigations, use `Spike:` as a prefix instead.
+2. **Check for duplicates:** `gh issue list --search "<key term from the artifact or action>"`. If a related issue exists, note the relationship — either this is a duplicate (stop), or add a dependency reference.
+3. **Pick 1–2 labels** from the vocabulary in `## Title and labels`.
+
+### 3. Draft the What
 
 Write one sentence. Test it: can you hand this sentence to a new contributor and have them understand what they are supposed to produce?
 
@@ -77,17 +198,17 @@ Write one sentence. Test it: can you hand this sentence to a new contributor and
 - ✗ "Improve how we write issues." (no artefact)
 - ✗ "Investigate whether we need a better issue format." (delivers nothing)
 
-### 3. Draft the Why
+### 4. Draft the Why
 
 Write one paragraph explaining the pain or gap. Include evidence where possible (observed failures, inconsistency, a concrete past example). Do not describe the solution — save that for the use-case.
 
-### 4. Draft the Use-case
+### 5. Draft the Use-case
 
 Write a short narrative (2–5 sentences) of the scenario in which the deliverable is used. Name the actor (agent, human, user), the trigger, the action, and the result.
 
 Example: *"Before any work begins, an agent invokes `write-issue` with a topic and receives a ready-to-file issue body. The agent reviews the body for completeness and files it; a human reviewer can confirm the issue satisfies the Definition of Ready without asking clarifying questions."*
 
-### 5. Draft the Acceptance criteria
+### 6. Draft the Acceptance criteria
 
 Each criterion must be:
 - **Specific** — names the exact behaviour, file, output, or condition
@@ -96,14 +217,15 @@ Each criterion must be:
 
 Write the AC as a checklist. Aim for 3–7 items. More than seven suggests the issue bundles multiple concerns.
 
-### 6. Draft the Out of scope
+### 7. Draft the Out of scope
 
 List at least two explicit exclusions. These are things a reasonable implementer might assume are included based on the What/Why, but are not part of this issue. If you cannot name any exclusions, the scope is probably still underspecified.
 
-### 7. Apply the Definition of Ready checklist
+### 8. Apply the Definition of Ready checklist
 
 Before presenting the issue, verify every item:
 
+- [ ] Title satisfies the formula: imperative verb (or `Spike:`), named artifact, dash, specific change
 - [ ] Single deliverable — no bundled concerns
 - [ ] The "why" is stated (the pain or gap being addressed)
 - [ ] At least one concrete use-case
@@ -184,4 +306,5 @@ If any item fails, revise before presenting.
 - **State the why.** An issue without a Why cannot be prioritised or deprioritised — it just sits.
 - **Criteria are verifiable.** If you cannot check a criterion without human judgement, rewrite it.
 - **Out of scope is mandatory.** At least two explicit exclusions. If you can't name any, the scope is underspecified.
-- **Definition of Ready is the gate.** Do not present the issue until all seven items are checked.
+- **Title and labels come first.** Before drafting the body, lock in the verb and labels. A title that can't be written yet signals the scope isn't clear enough.
+- **Definition of Ready is the gate.** Do not present the issue until all eight items are checked.
