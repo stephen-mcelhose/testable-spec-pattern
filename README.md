@@ -7,6 +7,7 @@ A personal workshop for building a workflow around **Go behavioral specs** — t
 | Skill | Purpose |
 | ----- | ------- |
 | [`go-behavioral-spec`](.agents/skills/go-behavioral-spec/SKILL.md) | Write Go tests as RFC 2119 behavioral specs |
+| [`resource-oriented-design`](.agents/skills/resource-oriented-design/SKILL.md) | Guide API design using Resource Oriented Design (AIP-compliant proto) |
 | [`docs-wiki`](.agents/skills/docs-wiki/SKILL.md) | Manage the `docs/` knowledge base |
 
 ## Docs
