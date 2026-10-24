@@ -5,6 +5,7 @@ package petstore.v1;
 option go_package = "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1;petstorev1";
 
 import "google/api/annotations.proto";
+import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
