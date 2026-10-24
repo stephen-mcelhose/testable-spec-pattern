@@ -11,112 +11,21 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-// Order is a purchase order for a pet.
-message Order {
-  option (google.api.resource) = {
-    type: "petstore.example.com/Order"
-    pattern: "orders/{order}"
-    singular: "order"
-    plural: "orders"
-  };
-
-  // The resource name of the order.
-  // Format: orders/{order}
-  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // The name of the pet being ordered.
-  // Format: pets/{pet}
-  string pet_name = 2 [
-    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
-  ];
-
-  // Number of pets ordered.
-  int32 quantity = 3;
-
-  // Estimated ship date.
-  google.protobuf.Timestamp ship_date = 4;
-
-  // The status of the order.
-  OrderStatus status = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Whether the order has been completed.
-  bool complete = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
-
-// OrderStatus represents the fulfilment state of an order.
-enum OrderStatus {
-  ORDER_STATUS_UNSPECIFIED = 0;
-  ORDER_STATUS_PLACED = 1;
-  ORDER_STATUS_APPROVED = 2;
-  ORDER_STATUS_DELIVERED = 3;
-}
-
-// ListOrdersRequest is the request for ListOrders.
-message ListOrdersRequest {
-  // Maximum number of orders to return. The service may return fewer.
-  // If unspecified, at most 50 orders are returned. Maximum is 100.
-  int32 page_size = 1;
-
-  // A page token from a previous ListOrders call.
-  string page_token = 2;
-
-  // A filter expression (AIP-160).
-  string filter = 3;
-}
-
-// ListOrdersResponse is the response for ListOrders.
-message ListOrdersResponse {
-  // The orders in this page.
-  repeated Order orders = 1;
-
-  // Token to retrieve the next page. Empty if no further pages.
-  string next_page_token = 2;
-}
-
-// GetOrderRequest is the request for GetOrder.
-message GetOrderRequest {
-  // The name of the order to retrieve.
-  // Format: orders/{order}
-  string name = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/Order"}
-  ];
-}
-
-// CreateOrderRequest is the request for CreateOrder.
-message CreateOrderRequest {
-  // The order to create.
-  Order order = 1 [(google.api.field_behavior) = REQUIRED];
-
-  // The ID to use for the order. Becomes the final segment of the order's name.
-  string order_id = 2;
-}
-
-// DeleteOrderRequest is the request for DeleteOrder.
-message DeleteOrderRequest {
-  // The name of the order to delete.
-  // Format: orders/{order}
-  string name = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/Order"}
-  ];
-}
-
 // OrderService manages purchase orders in the petstore.
 service OrderService {
   // Lists orders.
   rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {
     option (google.api.http) = {get: "/v1/orders"};
-    option (google.api.method_signature) = "";
+    // Top-level resource — method_signature omitted per AIP-132.
   }
 
-  // Gets an order by name.
+  // Gets an order by resource name.
   rpc GetOrder(GetOrderRequest) returns (Order) {
     option (google.api.http) = {get: "/v1/{name=orders/*}"};
     option (google.api.method_signature) = "name";
   }
 
-  // Creates an order.
+  // Creates a new order.
   rpc CreateOrder(CreateOrderRequest) returns (Order) {
     option (google.api.http) = {
       post: "/v1/orders"
@@ -129,5 +38,102 @@ service OrderService {
   rpc DeleteOrder(DeleteOrderRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/v1/{name=orders/*}"};
     option (google.api.method_signature) = "name";
+  }
+}
+
+// ListOrdersRequest is the request for ListOrders.
+message ListOrdersRequest {
+  // Maximum number of orders to return. The service may return fewer.
+  // If unspecified, at most 50 orders are returned. Maximum is 100.
+  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // A page token from a previous ListOrders call. Empty string for the first page.
+  string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // An AIP-160 filter expression.
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// ListOrdersResponse is the response for ListOrders.
+message ListOrdersResponse {
+  // The orders in this page.
+  repeated Order orders = 1;
+
+  // Token to retrieve the next page. Empty if no further pages exist.
+  string next_page_token = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// GetOrderRequest is the request for GetOrder.
+message GetOrderRequest {
+  // The resource name of the order to retrieve.
+  // Format: orders/{order}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Order"}
+  ];
+}
+
+// CreateOrderRequest is the request for CreateOrder.
+message CreateOrderRequest {
+  // The order to create.
+  Order order = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The ID to use for the order, becoming the final segment of the order's name.
+  // If omitted, a system-generated ID is used.
+  string order_id = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// DeleteOrderRequest is the request for DeleteOrder.
+message DeleteOrderRequest {
+  // The resource name of the order to delete.
+  // Format: orders/{order}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Order"}
+  ];
+}
+
+// Order is a purchase order for a pet.
+message Order {
+  option (google.api.resource) = {
+    type: "petstore.example.com/Order"
+    pattern: "orders/{order}"
+    singular: "order"
+    plural: "orders"
+  };
+
+  // The resource name of the order.
+  // Format: orders/{order}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The resource name of the pet being ordered.
+  // Format: pets/{pet}
+  string pet = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+  ];
+
+  // Number of units ordered.
+  int32 quantity = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Estimated ship time.
+  google.protobuf.Timestamp ship_time = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // The fulfilment state of the order. Server-managed.
+  Order.State state = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether the order has been marked complete.
+  bool complete = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // State represents the fulfilment state of an order.
+  enum State {
+    // Default value. Not used in valid responses.
+    STATE_UNSPECIFIED = 0;
+    // The order has been placed and is awaiting approval.
+    PLACED = 1;
+    // The order has been approved.
+    APPROVED = 2;
+    // The order has been delivered.
+    DELIVERED = 3;
   }
 }

@@ -11,86 +11,21 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 
-// User is an account in the petstore.
-message User {
-  option (google.api.resource) = {
-    type: "petstore.example.com/User"
-    pattern: "users/{user}"
-    singular: "user"
-    plural: "users"
-  };
-
-  // The resource name of the user.
-  // Format: users/{user}
-  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // The user's login name. Immutable after creation.
-  string username = 2 [(google.api.field_behavior) = IMMUTABLE];
-
-  // The user's first name.
-  string first_name = 3;
-
-  // The user's last name.
-  string last_name = 4;
-
-  // The user's email address.
-  string email = 5;
-
-  // The user's phone number.
-  string phone = 6;
-
-  // The user's status (0 = inactive, 1 = active, 2 = banned).
-  int32 user_status = 7;
-}
-
-// GetUserRequest is the request for GetUser.
-message GetUserRequest {
-  // The name of the user to retrieve.
-  // Format: users/{user}
-  string name = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/User"}
-  ];
-}
-
-// CreateUserRequest is the request for CreateUser.
-message CreateUserRequest {
-  // The user to create.
-  User user = 1 [(google.api.field_behavior) = REQUIRED];
-
-  // The ID to use for the user. Becomes the final segment of the user's name.
-  // Typically the username.
-  string user_id = 2;
-}
-
-// UpdateUserRequest is the request for UpdateUser.
-message UpdateUserRequest {
-  // The user to update. The user's name field is used to identify the user.
-  User user = 1 [(google.api.field_behavior) = REQUIRED];
-
-  // The list of fields to update. If omitted, all populated fields are updated.
-  google.protobuf.FieldMask update_mask = 2;
-}
-
-// DeleteUserRequest is the request for DeleteUser.
-message DeleteUserRequest {
-  // The name of the user to delete.
-  // Format: users/{user}
-  string name = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/User"}
-  ];
-}
-
 // UserService manages user accounts in the petstore.
 service UserService {
-  // Gets a user by name.
+  // Lists users.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {get: "/v1/users"};
+    // Top-level resource — method_signature omitted per AIP-132.
+  }
+
+  // Gets a user by resource name.
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.http) = {get: "/v1/{name=users/*}"};
     option (google.api.method_signature) = "name";
   }
 
-  // Creates a user.
+  // Creates a new user.
   rpc CreateUser(CreateUserRequest) returns (User) {
     option (google.api.http) = {
       post: "/v1/users"
@@ -113,4 +48,97 @@ service UserService {
     option (google.api.http) = {delete: "/v1/{name=users/*}"};
     option (google.api.method_signature) = "name";
   }
+}
+
+// ListUsersRequest is the request for ListUsers.
+message ListUsersRequest {
+  // Maximum number of users to return. The service may return fewer.
+  // If unspecified, at most 50 users are returned. Maximum is 100.
+  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // A page token from a previous ListUsers call. Empty string for the first page.
+  string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // An AIP-160 filter expression.
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// ListUsersResponse is the response for ListUsers.
+message ListUsersResponse {
+  // The users in this page.
+  repeated User users = 1;
+
+  // Token to retrieve the next page. Empty if no further pages exist.
+  string next_page_token = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// GetUserRequest is the request for GetUser.
+message GetUserRequest {
+  // The resource name of the user to retrieve.
+  // Format: users/{user}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/User"}
+  ];
+}
+
+// CreateUserRequest is the request for CreateUser.
+message CreateUserRequest {
+  // The user to create.
+  User user = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The ID to use for the user, becoming the final segment of the user's name.
+  // Typically the username. If omitted, a system-generated ID is used.
+  string user_id = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// UpdateUserRequest is the request for UpdateUser.
+message UpdateUserRequest {
+  // The user to update. The user's `name` field identifies which user to update.
+  User user = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The list of fields to update. If omitted, all populated fields are updated.
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// DeleteUserRequest is the request for DeleteUser.
+message DeleteUserRequest {
+  // The resource name of the user to delete.
+  // Format: users/{user}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/User"}
+  ];
+}
+
+// User is an account in the petstore.
+message User {
+  option (google.api.resource) = {
+    type: "petstore.example.com/User"
+    pattern: "users/{user}"
+    singular: "user"
+    plural: "users"
+  };
+
+  // The resource name of the user.
+  // Format: users/{user}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The user's login name. Immutable after creation.
+  string username = 2 [(google.api.field_behavior) = IMMUTABLE];
+
+  // The user's given name (first name).
+  string given_name = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // The user's family name (last name).
+  string family_name = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // The user's email address.
+  string email = 5 [(google.api.field_behavior) = OPTIONAL];
+
+  // The user's phone number.
+  string phone = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // The user's account status (0 = inactive, 1 = active, 2 = banned).
+  int32 user_status = 7 [(google.api.field_behavior) = OPTIONAL];
 }
