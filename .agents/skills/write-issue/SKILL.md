@@ -7,9 +7,127 @@ allowed-tools: Read Write Bash(gh issue list:*) Bash(gh issue view:*)
 
 # write-issue
 
-Produce a GitHub issue body that a human or agent can pick up cold and deliver without back-and-forth. The output must satisfy the Definition of Ready (see below) before it is presented.
+Produce a GitHub issue — title, labels, and body — that a human or agent can pick up cold and deliver without back-and-forth. The output must satisfy the Definition of Ready (see below) before it is presented.
 
-See `references/issue-patterns.md` for the research behind the format choice.
+See `references/issue-patterns.md` for the research behind the body format choice.
+
+---
+
+## Title and labels
+
+Title and labels together are the **discovery contract** for the backlog. The body is the work contract. Both matter; the title comes first.
+
+### The title formula
+
+```
+<type>: <domain-artifact> — <specific-change>
+```
+
+The em-dash (`—`) divides the artifact from the action. It makes `gh issue list` scannable at two levels:
+- Left of the em-dash → which part of the system
+- Right of the em-dash → what specifically is changing
+
+A title must stand alone. A reader cold-scanning `gh issue list` should not need to open the issue to understand the nature of the work.
+
+### Type prefix (mandatory)
+
+Drawn from Conventional Commits, extended with `spike:` for issue work:
+
+| Prefix        | When to use                                                      |
+| ------------- | ---------------------------------------------------------------- |
+| `feat:`       | Delivers new capability — service feature, endpoint, skill       |
+| `fix:`        | Corrects a defect in existing behaviour                          |
+| `chore:`      | Maintenance — skill updates, config, tooling, doc cleanup        |
+| `docs:`       | Documentation-only (ADR, wiki entry, reference doc)              |
+| `refactor:`   | Restructures without changing observable behaviour               |
+| `spike:`      | Time-boxed investigation — produces a finding, not a feature     |
+| `test:`       | Adds or repairs behavioral/spec tests, no implementation change  |
+
+### Artifact naming
+
+The artifact is a domain noun + optional qualifier. Use the most specific name available:
+
+| Work class           | Artifact pattern               | Example                                   |
+| -------------------- | ------------------------------ | ----------------------------------------- |
+| Proto contract       | `<service> <Resource> proto`   | `billing Invoice proto`                   |
+| gRPC method          | `<Service>.<Method> RPC`       | `BillingService.CreateInvoice RPC`        |
+| Go service impl      | `<Resource> service`           | `Invoice service`                         |
+| Behavioral spec      | `<Service>.<Method> spec`      | `BillingService.ListInvoices spec`        |
+| Kafka consumer       | `<topic> Kafka consumer`       | `orders-created Kafka consumer`           |
+| PubSub consumer      | `<topic> PubSub consumer`      | `payment-events PubSub consumer`          |
+| Go library/package   | `<pkg> package`                | `currency package`                        |
+| Skill                | `<skill-name> skill`           | `write-issue skill`                       |
+| ADR / decision doc   | `ADR-<N>`                      | `ADR-007`                                 |
+
+### Good and bad titles
+
+**Good:**
+```
+feat: BillingService.CreateInvoice RPC — wire implementation to generated proto types
+feat: billing Invoice proto — define AIP-compliant resource with field behaviors
+chore: write-issue skill — add titling guidance and domain references
+spike: orders-created Kafka consumer — evaluate dead-letter vs retry-with-backoff strategy
+docs: ADR-007 — adopt buf as proto toolchain enforcement gate
+test: BillingService.ListInvoices spec — add behavioral spec for pagination contract
+```
+
+**Bad:**
+```
+update billing service           ← no type, no artifact, no action
+feat: improve proto definitions  ← artifact vague, action vague
+Investigate Kafka options        ← no type prefix, no artifact, no specific question
+fix things                       ← all three fields missing
+```
+
+### Labels
+
+Labels are a second index over the backlog. With strong titles you can search; with labels you can filter without searching. Use 1–2 labels per issue.
+
+**Recommended label vocabulary for backend Go repos:**
+
+| Label     | Covers                                                        |
+| --------- | ------------------------------------------------------------- |
+| `proto`   | Proto file authoring, AIP compliance, buf tooling             |
+| `grpc`    | gRPC service implementation, RPC contracts, generated types   |
+| `kafka`   | Kafka consumer or producer work                               |
+| `pubsub`  | PubSub consumer or producer work                              |
+| `spec`    | Behavioral spec tests                                         |
+| `skill`   | Skill authoring, updates, evaluation                          |
+| `docs`    | Documentation, ADRs, reference material                       |
+| `spike`   | Investigations, feasibility studies, time-boxed research      |
+| `infra`   | Build tooling, CI/CD, Docker, deployment                      |
+
+Teams extend this as their domain grows. The skill teaches the vocabulary; each repo manages its own GitHub labels.
+
+### Filing with labels
+
+Include `--label` flags in the `gh issue create` command:
+
+```bash
+gh issue create \
+  --title "feat: BillingService.CreateInvoice RPC — wire implementation to generated proto types" \
+  --body-file /tmp/issue.md \
+  --label grpc --label spec
+```
+
+### Discovery patterns
+
+```bash
+# Filter by domain
+gh issue list --label proto
+gh issue list --label grpc
+
+# Full-text search across title + body
+gh issue list --search "CreateInvoice"
+gh issue list --search "AIP-133"
+
+# Multi-label AND
+gh issue list --label proto --label spike
+
+# Formatted output
+gh issue list --label grpc --json number,title,state \
+  | jq -r '.[] | "#\(.number) \(.title)"'
+```
 
 ---
 
@@ -67,9 +185,17 @@ External requirements that must be in place before work can start: upstream issu
 Before writing anything, identify:
 - The **artefact**: what is being built, changed, or fixed? If the topic is vague, ask one clarifying question.
 - The **motivation**: why does this matter? If not stated, infer from context and state your inference explicitly in the Why section so a reviewer can correct it.
-- Whether any **existing issues** cover this topic (`gh issue list` to check for duplicates).
+- Whether any **existing issues** cover this topic — run `gh issue list --search "<key term>"` to check for duplicates before drafting.
 
-### 2. Draft the What
+### 2. Choose a title and labels
+
+Before drafting the body, lock in the title and labels:
+
+1. **Apply the formula:** `<type>: <domain-artifact> — <specific-change>`. Consult the artifact naming table and type prefix table in `## Title and labels`.
+2. **Check for duplicates:** `gh issue list --search "<key term from the artifact or action>"`. If a related issue exists, note the relationship — either this is a duplicate (stop), or add a dependency reference.
+3. **Pick 1–2 labels** from the vocabulary in `## Title and labels`.
+
+### 3. Draft the What
 
 Write one sentence. Test it: can you hand this sentence to a new contributor and have them understand what they are supposed to produce?
 
@@ -77,17 +203,17 @@ Write one sentence. Test it: can you hand this sentence to a new contributor and
 - ✗ "Improve how we write issues." (no artefact)
 - ✗ "Investigate whether we need a better issue format." (delivers nothing)
 
-### 3. Draft the Why
+### 4. Draft the Why
 
 Write one paragraph explaining the pain or gap. Include evidence where possible (observed failures, inconsistency, a concrete past example). Do not describe the solution — save that for the use-case.
 
-### 4. Draft the Use-case
+### 5. Draft the Use-case
 
 Write a short narrative (2–5 sentences) of the scenario in which the deliverable is used. Name the actor (agent, human, user), the trigger, the action, and the result.
 
 Example: *"Before any work begins, an agent invokes `write-issue` with a topic and receives a ready-to-file issue body. The agent reviews the body for completeness and files it; a human reviewer can confirm the issue satisfies the Definition of Ready without asking clarifying questions."*
 
-### 5. Draft the Acceptance criteria
+### 6. Draft the Acceptance criteria
 
 Each criterion must be:
 - **Specific** — names the exact behaviour, file, output, or condition
@@ -96,14 +222,15 @@ Each criterion must be:
 
 Write the AC as a checklist. Aim for 3–7 items. More than seven suggests the issue bundles multiple concerns.
 
-### 6. Draft the Out of scope
+### 7. Draft the Out of scope
 
 List at least two explicit exclusions. These are things a reasonable implementer might assume are included based on the What/Why, but are not part of this issue. If you cannot name any exclusions, the scope is probably still underspecified.
 
-### 7. Apply the Definition of Ready checklist
+### 8. Apply the Definition of Ready checklist
 
 Before presenting the issue, verify every item:
 
+- [ ] Title satisfies the formula: type prefix, named artifact, em-dash, specific change
 - [ ] Single deliverable — no bundled concerns
 - [ ] The "why" is stated (the pain or gap being addressed)
 - [ ] At least one concrete use-case
@@ -184,4 +311,5 @@ If any item fails, revise before presenting.
 - **State the why.** An issue without a Why cannot be prioritised or deprioritised — it just sits.
 - **Criteria are verifiable.** If you cannot check a criterion without human judgement, rewrite it.
 - **Out of scope is mandatory.** At least two explicit exclusions. If you can't name any, the scope is underspecified.
-- **Definition of Ready is the gate.** Do not present the issue until all seven items are checked.
+- **Title and labels come first.** Before drafting the body, lock in the title formula and pick labels. A title that can't be written yet signals the scope isn't clear enough.
+- **Definition of Ready is the gate.** Do not present the issue until all eight items are checked.
