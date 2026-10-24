@@ -1,0 +1,201 @@
+syntax = "proto3";
+
+package petstore.v1;
+
+option go_package = "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1;petstorev1";
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+
+// PetService manages pets in the petstore.
+service PetService {
+  // Lists pets. Supports filtering by state and tags via the filter field (AIP-160).
+  rpc ListPets(ListPetsRequest) returns (ListPetsResponse) {
+    option (google.api.http) = {get: "/v1/pets"};
+    // Top-level resource — method_signature omitted per AIP-132.
+  }
+
+  // Gets a pet by resource name.
+  rpc GetPet(GetPetRequest) returns (Pet) {
+    option (google.api.http) = {get: "/v1/{name=pets/*}"};
+    option (google.api.method_signature) = "name";
+  }
+
+  // Creates a new pet.
+  rpc CreatePet(CreatePetRequest) returns (Pet) {
+    option (google.api.http) = {
+      post: "/v1/pets"
+      body: "pet"
+    };
+    option (google.api.method_signature) = "pet,pet_id";
+  }
+
+  // Updates a pet. Supports partial update via update_mask.
+  rpc UpdatePet(UpdatePetRequest) returns (Pet) {
+    option (google.api.http) = {
+      patch: "/v1/{pet.name=pets/*}"
+      body: "pet"
+    };
+    option (google.api.method_signature) = "pet,update_mask";
+  }
+
+  // Deletes a pet.
+  rpc DeletePet(DeletePetRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/{name=pets/*}"};
+    option (google.api.method_signature) = "name";
+  }
+
+  // Uploads a photo for a pet. Custom method (AIP-136).
+  rpc UploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {
+    option (google.api.http) = {
+      post: "/v1/{name=pets/*}:uploadPhoto"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name,photo_data";
+  }
+}
+
+// ListPetsRequest is the request for ListPets.
+message ListPetsRequest {
+  // Maximum number of pets to return. The service may return fewer.
+  // If unspecified, at most 50 pets are returned. Maximum is 100.
+  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // A page token from a previous ListPets call. Empty string for the first page.
+  string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // An AIP-160 filter expression. Replaces findByStatus and findByTags.
+  // Example: state = "PET_STATE_AVAILABLE"
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// ListPetsResponse is the response for ListPets.
+message ListPetsResponse {
+  // The pets in this page.
+  repeated Pet pets = 1;
+
+  // Token to retrieve the next page. Empty if no further pages exist.
+  string next_page_token = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// GetPetRequest is the request for GetPet.
+message GetPetRequest {
+  // The resource name of the pet to retrieve.
+  // Format: pets/{pet}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+  ];
+}
+
+// CreatePetRequest is the request for CreatePet.
+message CreatePetRequest {
+  // The pet to create.
+  Pet pet = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The ID to use for the pet, becoming the final segment of the pet's name.
+  // If omitted, a system-generated ID is used.
+  string pet_id = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// UpdatePetRequest is the request for UpdatePet.
+message UpdatePetRequest {
+  // The pet to update. The pet's `name` field identifies which pet to update.
+  Pet pet = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The list of fields to update. If omitted, all populated fields are updated.
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// DeletePetRequest is the request for DeletePet.
+message DeletePetRequest {
+  // The resource name of the pet to delete.
+  // Format: pets/{pet}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+  ];
+}
+
+// UploadPhotoRequest is the request for the UploadPhoto custom method.
+message UploadPhotoRequest {
+  // The resource name of the pet to attach a photo to.
+  // Format: pets/{pet}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+  ];
+
+  // The raw photo bytes to upload.
+  bytes photo_data = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional metadata describing the photo.
+  string additional_metadata = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// UploadPhotoResponse is returned from the UploadPhoto custom method.
+message UploadPhotoResponse {
+  // The updated pet after the photo was attached.
+  Pet pet = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Pet is a pet available (or formerly available) in the store.
+message Pet {
+  option (google.api.resource) = {
+    type: "petstore.example.com/Pet"
+    pattern: "pets/{pet}"
+    singular: "pet"
+    plural: "pets"
+  };
+
+  // The resource name of the pet.
+  // Format: pets/{pet}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The display name of the pet.
+  string display_name = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // The pet's category.
+  Category category = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // URLs of photos of the pet.
+  repeated string photo_urls = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // Tags associated with the pet.
+  repeated Tag tags = 5 [(google.api.field_behavior) = OPTIONAL];
+
+  // The pet's availability state. Set by store staff.
+  // (-- api-linter: core::0216::state-field-output-only=disabled
+  //     Pet state is store-staff-settable, not server-managed. --)
+  Pet.State state = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // State represents the availability of a pet in the store.
+  enum State {
+    // Default value. Not used in valid responses.
+    STATE_UNSPECIFIED = 0;
+    // The pet is available for adoption.
+    AVAILABLE = 1;
+    // An adoption is pending for this pet.
+    PENDING = 2;
+    // The pet has been adopted.
+    SOLD = 3;
+  }
+}
+
+// Category groups pets by type.
+message Category {
+  // The display name of the category.
+  string display_name = 1 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Tag is a label applied to a pet.
+message Tag {
+  // The display name of the tag.
+  string display_name = 1 [(google.api.field_behavior) = OPTIONAL];
+}
+
+

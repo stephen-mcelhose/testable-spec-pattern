@@ -16,3 +16,6 @@
 ## [2026-10-23] add | docs/decisions/002-github-issues-as-work-tracker.md — ADR-002: GitHub Issues as Work Tracker
 ## [2026-10-23] add | docs/decisions/003-kanban-workflow.md — ADR-003: Kanban Workflow via GitHub Issues
 ## [2026-10-23] edit | AGENTS.md — added Workflow section (board state, DoR, session protocol)
+## [2026-10-24] add | docs/research/aip-proto-learnings.md — AIP Proto Learnings iter-1 Petstore (spike)
+## [2026-10-24] edit | docs/index.md — removed duplicate ADR-006 entry, removed broken evals/ rubric reference, added aip-proto-learnings
+## [2026-10-24] edit | README.md — added resource-oriented-design skill to skills table
