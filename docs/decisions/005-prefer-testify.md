@@ -50,6 +50,8 @@ The `go-behavioral-spec` skill targets tests that read like RFC 2119 contracts. 
 
 **Revisit this decision if the Go standard library gains built-in assertion support** — either via a first-party `testing/assert` package or a significant improvement to `t.Errorf` ergonomics — to the point where testify's advantage over stdlib is marginal. At that point, evaluate whether the zero-dependency benefit outweighs the remaining ergonomic gap.
 
+The familiarity argument is also contingent on community norms: if Go ecosystem conventions shift toward stdlib-only testing, the ubiquity argument inverts. Worth a periodic check.
+
 Until that trigger fires, the default is testify.
 
 ## Consequences
