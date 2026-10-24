@@ -68,6 +68,7 @@ A service is not imported externally. All Go code goes inside `internal/`; binar
 - `internal/` is compiler-enforced: the Go toolchain prevents any external module from importing it.
 - `cmd/{appname}/main.go` wires internals together. Keep it minimal — no business logic in `main`.
 - Name `cmd/{appname}` after the deployed binary, not a generic name like `server` or `app`.
+- **Interfaces belong with the consumer, not the implementor.** The `Store` interface used by `service/` is declared in `internal/service/`, not in `internal/store/`. `internal/store/` holds the concrete implementation only. See [Go Code Review Comments — Interfaces](https://go.dev/wiki/CodeReviewComments#interfaces).
 
 ---
 
@@ -92,18 +93,15 @@ A service is not imported externally. All Go code goes inside `internal/`; binar
 
 ## Step 4 — Test placement
 
-| Test type           | Placement                         | Package declaration  |
-| ------------------- | --------------------------------- | -------------------- |
-| Unit / spec         | Same directory as the source file | `package {pkg}` or `package {pkg}_test` |
-| Black-box / contract | Same directory, `_test.go` suffix | `package {pkg}_test` |
-| Shared test helpers | Same directory, `{name}_test.go`  | `package {pkg}_test` |
-| Integration / E2E   | `test/` or `testdata/` at root    | Separate build tag   |
+Test files live **alongside** the source they test — not in a separate top-level `test/` directory.
 
-**Rules:**
-- Test files live **alongside** the source they test — not in a separate top-level `test/` directory.
-- Prefer `package {pkg}_test` (black-box) when specifying the public API contract.
-- Use `package {pkg}` (internal) only for unexported helpers — add a comment explaining why.
-- Shared test helpers used by multiple `_test.go` files in the same directory: collect them in `{name}_test.go` (e.g., `stubs_test.go`).
+| Test type         | Placement                        | Package declaration |
+| ----------------- | -------------------------------- | ------------------- |
+| Unit / spec       | Same directory as the source     | See note below      |
+| Shared helpers    | Same directory, `{name}_test.go` | `package {pkg}_test` |
+| Integration / E2E | `test/` or `testdata/` at root   | Separate build tag  |
+
+**Package declaration for tests** is governed by the `go-behavioral-spec` skill — defer to it for the `package {pkg}` vs `package {pkg}_test` decision and for how test cases are structured and named.
 
 ---
 
@@ -116,6 +114,7 @@ A service is not imported externally. All Go code goes inside `internal/`; binar
 | One package per directory                | All `.go` files in a directory share one name   |
 | No stutter                               | `petstore.Pet`, not `petstore.PetPet`           |
 | No generic names                         | Avoid `util`, `common`, `helpers` — name by what the package does |
+| **Prefer descriptive over abbreviated**  | `authentication` over `auth`; `service` over `svc`; `petstore` over `ps` |
 
 ---
 
@@ -156,3 +155,6 @@ Naming the subdirectory after the deployed binary (e.g., `cmd/petstore/`) rather
 
 **Do not repeat the project name inside `internal/`.**
 When the project root *is* the module root (the directory containing `go.mod`), nesting code under `internal/petstore/` is redundant — you are already inside `petstore`. Name sub-packages by domain concept instead.
+
+**Interfaces belong with the consumer, not the implementor.**
+The Go Code Review Comments state: *"Go interfaces generally belong in the package that uses values of the interface type, not the package that implements those values."* ([go.dev/wiki/CodeReviewComments#interfaces](https://go.dev/wiki/CodeReviewComments#interfaces)). Defining a `Store` interface in `internal/service/` (the consumer) rather than `internal/store/` (the implementor) means you can evolve the implementation freely, test with a hand-stub without touching `internal/store/`, and keep the interface minimal (you only express the methods you actually call).
