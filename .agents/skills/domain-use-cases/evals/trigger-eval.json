@@ -1,0 +1,82 @@
+[
+  {
+    "query": "we're building a parking lot management system — can you write use-cases for it? I want to figure out what the domain concepts are before we start coding",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to gather requirements for a library management system. Start with what happens when someone borrows a book",
+    "should_trigger": true
+  },
+  {
+    "query": "write domain use-cases for a hotel booking system. focus on the guest and the front desk",
+    "should_trigger": true
+  },
+  {
+    "query": "can you help me figure out the domain concepts for a ride-sharing app? what are the actors, what are the main things that happen",
+    "should_trigger": true
+  },
+  {
+    "query": "we're about to design a food delivery service. before we touch the proto, I want to map out what the domain objects are — can you interview me?",
+    "should_trigger": true
+  },
+  {
+    "query": "write use-cases for our hospital appointment scheduling system. the main actors are patients and doctors",
+    "should_trigger": true
+  },
+  {
+    "query": "let's spec out what happens in an ATM — who are the actors, what are the domain events, what objects have lifecycle",
+    "should_trigger": true
+  },
+  {
+    "query": "I want to gather requirements for our inventory tracking system before we write any tests",
+    "should_trigger": true
+  },
+  {
+    "query": "what are the domain concepts for an e-commerce checkout flow? I mean the real business concepts, not the API",
+    "should_trigger": true
+  },
+  {
+    "query": "write a use-case for placing an order in our restaurant system — I want to see the actors and what changes state",
+    "should_trigger": true
+  },
+  {
+    "query": "write me a REST API spec for a parking lot system with endpoints for entry, exit, and availability",
+    "should_trigger": false
+  },
+  {
+    "query": "generate a proto definition for a hotel booking service with Room, Booking, and Guest resources",
+    "should_trigger": false
+  },
+  {
+    "query": "write a Go struct for a Trip that has driver, rider, pickup and destination fields",
+    "should_trigger": false
+  },
+  {
+    "query": "scaffold a new Go project for a library system with the standard layout",
+    "should_trigger": false
+  },
+  {
+    "query": "write a gherkin scenario for borrowing a book when the member has reached their loan limit",
+    "should_trigger": false
+  },
+  {
+    "query": "what's the difference between an aggregate root and an entity in DDD?",
+    "should_trigger": false
+  },
+  {
+    "query": "write acceptance criteria for the checkout feature in our e-commerce app",
+    "should_trigger": false
+  },
+  {
+    "query": "can you review this proto file and tell me if the resource design follows AIP guidelines",
+    "should_trigger": false
+  },
+  {
+    "query": "write behavioral spec tests for the Trip service — specifically the case where a driver cancels after accepting",
+    "should_trigger": false
+  },
+  {
+    "query": "I need to model the data for a hotel — what tables should I have in postgres",
+    "should_trigger": false
+  }
+]
