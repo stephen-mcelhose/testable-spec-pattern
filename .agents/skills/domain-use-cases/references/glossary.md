@@ -6,29 +6,34 @@ Reference for terms used in the domain-use-cases skill.
 
 ## Actor
 
-A named person or system that initiates or receives domain events. Actors are specific roles, not generic system labels.
+A named person or system that initiates actions in the domain. Actors are specific roles, not generic system labels.
 
-✅ `Customer`, `StoreStaff`, `Vet`, `PetOwner`
+The test: an actor is the *who* in a use-case — the one pursuing a goal. If you cannot write "Actor: X" at the top of a use-case and have X do something meaningful in the main flow, it is not an actor.
+
+External systems can be actors when they actively initiate something (`PaymentGateway` triggering a `PaymentFailed` event). Passive consumers — systems that only receive or forward messages without pursuing a goal — are not actors; they are infrastructure.
+
+✅ `Customer`, `StoreStaff`, `Vet`, `Driver`
 ❌ `User`, `Person`, `Client` — too generic to name a domain role
-❌ `OrderService`, `UserRepository` — these are implementation concepts, not actors
+❌ `OrderService`, `UserRepository` — these coordinate or store; they do not pursue goals
+❌ `MessageQueue`, `NotificationService` — passive consumers, not actors
 
 ---
 
 ## Domain Object
 
-A thing that holds its own state and has a lifecycle you can track. It exists independently and can be identified over time.
+A named thing in the domain that is either tracked over time (entity) or defined purely by its attributes (value object). The key question: does the domain care about *which one* it is, or only *what it contains*?
 
-✅ `Pet`, `Order`, `Appointment`
+✅ `Pet`, `Order`, `Appointment`, `Money`, `Address`
 ❌ `CreateOrderRequest`, `GetPetResponse` — wire shapes produced when designing contracts, not domain objects
-❌ `OrderService`, `PetRepository` — these coordinate or store; they do not have a lifecycle of their own
+❌ `OrderService`, `PetRepository` — these coordinate or store; they are not domain things with meaning of their own
 
 Two subtypes — use `entity` or `value-object` as the tag when you can tell them apart:
 
-**Entity** — has identity; the same concept persists through state changes (`Order` placed → approved → delivered is still the same `Order`).
+**Entity** — the domain cares *which one it is*. The same entity persists through state changes: an `Order` placed → approved → delivered is still the same `Order`. Has identity. Has lifecycle states.
 
-**Value object** — has no identity; defined entirely by its attributes; immutable (`Category`, `Tag`, `Money`). Two `Category` objects with the same name are the same thing.
+**Value object** — the domain only cares *what it contains*. Immutable; defined entirely by its attributes. Two `Money` objects both representing £10 are the same thing — there is no "which one". No identity, no lifecycle. Examples: `Money`, `Address`, `DateRange`.
 
-When uncertain, use `entity` and refine later.
+`Category` and `Tag` feel like value objects in many domains, but become entities if the business needs to rename, merge, or deactivate them. When uncertain, use `entity` and refine later.
 
 ---
 
@@ -46,9 +51,10 @@ Something that happened in the domain. Named in past tense. An immutable fact �
 
 Something an actor does that causes a domain event. Named in imperative form. An action is the intent; the event is the result.
 
-✅ `PlaceOrder`, `AdoptPet`, `UpdatePetDetails`
+✅ `PlaceOrder`, `AdoptPet`, `ApproveApplication`, `CancelBooking`
 ❌ `OrderPlaced` — that is a domain event, not an action
 ❌ `CreateOrder` — prefer domain language: `PlaceOrder` not `CreateOrder`
+❌ `UpdatePetDetails` — too close to CRUD; prefer a name that says *why*: `CorrectPetRecord`, `AddPetPhoto`
 
 ---
 

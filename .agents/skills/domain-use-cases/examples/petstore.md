@@ -1,6 +1,8 @@
 # Petstore — Domain Use-Cases
 
-Worked example for the `domain-use-cases` skill. Domain concepts discovered through a client interview; use-cases written from that interview without reference to any implementation.
+> **⚠️ Spec-derived, not a genuine interview.** This example was reverse-engineered from the [Swagger PetStore v3 OpenAPI spec](https://petstore3.swagger.io/). The domain concepts were extracted from a pre-existing technical spec, not discovered through conversation with a domain expert. As a result, some concepts are invented (e.g. `Customer`/`StoreStaff` actor split, `adopted` instead of the spec's `sold`) rather than discovered. Use the [ride-sharing example](./ride-sharing.md) as the canonical worked example — that one was built from a genuine discovery interview with no implementation consulted.
+
+Retained here for comparison: to illustrate the difference between spec-derived vocabulary and domain-discovered vocabulary.
 
 ---
 

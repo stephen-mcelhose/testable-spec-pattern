@@ -106,7 +106,7 @@ Acceptance criteria:
 
 ## Option 4: Job Stories (Jobs-to-be-Done)
 
-**Origin:** Paul Adams (Intercom), derived from Clayton Christensen's Jobs-to-be-Done theory. Popularised as an alternative to User Stories for complex or context-sensitive systems.
+**Origin:** Alan Klement, derived from Clayton Christensen's Jobs-to-be-Done theory. Popularised as an alternative to User Stories for complex or context-sensitive systems.
 
 **Format:**
 ```

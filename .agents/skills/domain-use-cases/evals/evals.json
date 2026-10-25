@@ -1,0 +1,65 @@
+{
+  "skill_name": "domain-use-cases",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're building a parking lot management system. I want to figure out the domain concepts before we write any code or design any API. Write use-cases for the main flows — entering, exiting, and paying — then extract the domain concepts.",
+      "expected_output": "Use-cases in stripped-down Cockburn format (Use Case / Actor / Goal / Main flow) for the key parking lot flows, followed by concept documents for each extracted concept with OKF frontmatter.",
+      "expectations": [
+        "At least two use-cases are produced, each with Use Case, Actor, Goal, and Main flow fields",
+        "Actors are named domain roles — not generic labels like 'User' or 'Person'",
+        "Main flow steps use domain language — no HTTP verbs, endpoint paths, or CRUD verbs (Create/Read/Update/Delete)",
+        "At least one domain object with lifecycle states is extracted — e.g. a parking space or session with states like available/occupied",
+        "ParkingSpace (or equivalent) and a session/ticket concept are extracted as separate domain objects — they have different lifecycles",
+        "Concept documents include OKF frontmatter with type: concept, title, description, and tags fields",
+        "Concept tags use the defined kind vocabulary: entity, value-object, domain-event, actor, or action",
+        "No concept is named after a CRUD operation or wire shape (e.g. CreateSpaceRequest, UpdateTicketResponse)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to gather requirements for a library management system. Start with what happens when a member borrows a book and work outward from there. I want domain use-cases and concept documents — no API design yet.",
+      "expected_output": "Use-cases covering the borrowing lifecycle and any related flows, followed by concept documents. The Book/Copy distinction should emerge.",
+      "expectations": [
+        "At least two use-cases are produced, each with Use Case, Actor, Goal, and Main flow fields",
+        "Actors include Member and Librarian (or equivalent named roles)",
+        "Main flow steps use domain language — no HTTP verbs, endpoint paths, or CRUD verbs",
+        "Both Book (title) and Copy (physical item) are extracted as separate domain objects, or the skill asks a clarifying question that surfaces the distinction",
+        "Loan is extracted as a domain object with lifecycle states — e.g. active, overdue, returned",
+        "Concept documents include OKF frontmatter with type: concept, title, description, and tags fields",
+        "Concept tags use the defined kind vocabulary: entity, value-object, domain-event, actor, or action",
+        "No concept is named after a database table or CRUD operation"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're designing a hotel booking system. Before we touch any schema or API, I want to map out the domain. Write use-cases covering the guest experience and the front desk side, then extract the domain concepts.",
+      "expected_output": "Use-cases for the guest and front desk flows, followed by concept documents. The Reservation/Stay distinction should emerge.",
+      "expectations": [
+        "At least three use-cases are produced, each with Use Case, Actor, Goal, and Main flow fields",
+        "Actors include Guest and a front desk role (Receptionist, FrontDesk, or equivalent named role)",
+        "Main flow steps use domain language — no HTTP verbs, endpoint paths, or CRUD verbs",
+        "Reservation and Stay (or equivalent) are extracted as separate domain objects with different lifecycles — a future commitment vs. an active occupancy",
+        "Room is extracted as a domain object with availability lifecycle states",
+        "Concept documents include OKF frontmatter with type: concept, title, description, and tags fields",
+        "Concept tags use the defined kind vocabulary: entity, value-object, domain-event, actor, or action",
+        "No concept is named after a wire shape, endpoint, or database table"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're building a ride-sharing app similar to Uber. Write domain use-cases for the core flows — requesting a ride, accepting a trip offer, and completing a trip — then extract the domain concepts.",
+      "expected_output": "Use-cases for the rider and driver flows, followed by concept documents including Trip with its full lifecycle.",
+      "expectations": [
+        "At least three use-cases are produced, each with Use Case, Actor, Goal, and Main flow fields",
+        "Actors include Rider and Driver as distinct named roles",
+        "Main flow steps use domain language — no HTTP verbs, endpoint paths, or CRUD verbs",
+        "Trip is extracted as a domain object with multiple lifecycle states (at minimum: requested, accepted, in progress, completed)",
+        "Driver availability is recognised as distinct from driver account status — either as a separate concept or as an explicit note in a use-case step",
+        "Concept documents include OKF frontmatter with type: concept, title, description, and tags fields",
+        "Concept tags use the defined kind vocabulary: entity, value-object, domain-event, actor, or action",
+        "No concept is named after a CRUD operation, wire shape, or endpoint"
+      ]
+    }
+  ]
+}
