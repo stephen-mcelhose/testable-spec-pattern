@@ -16,9 +16,10 @@ type Idea interface{ Undefined }
 // CompletedProject is the full output of the workflow — provenance plus the
 // built project carrying its runnable specification.
 type CompletedProject struct {
-	Requirements Requirements
-	Contracts    ProtoContracts
-	Project      BuiltProject
+	Requirements  Requirements
+	Contracts     Contracts
+	Specification Specification
+	Project       BuiltProject
 }
 
 // Requirements is the output of the requirements-gathering phase.
@@ -26,6 +27,10 @@ type CompletedProject struct {
 // domain sketches, and Gherkin scenarios are views of requirements,
 // not a fixed composition.
 type Requirements interface{ Undefined }
+
+type GatherRequirementStrategy func(existing Requirements, idea Idea) (Requirements, error)
+
+type BuildContractStrategy func(existing Contracts, requirements Requirements) (Contracts, error)
 
 // UseCase describes a single actor–goal interaction with the system.
 type UseCase interface{ Undefined }
@@ -38,7 +43,21 @@ type DomainSketch interface{ Undefined }
 // grounded in domain names.
 type GherkinScenario interface{ Undefined }
 
-// ProtoContracts is the output of the contract-design phase.
+// Contracts is the full set of contracts for a system —
+// code contracts (layer boundaries, compile-time enforced) and
+// wire contracts (process boundaries, runtime enforced).
+type Contracts struct {
+	Code CodeContracts
+	Wire ProtoContracts
+}
+
+// CodeContracts is the output of the domain modeling phase —
+// Go interfaces and strategy function signatures at layer boundaries.
+// A domain model is a set of code contracts: it names the domain's
+// interfaces and stub functions, leaving implementations unresolved.
+type CodeContracts interface{ Undefined }
+
+// ProtoContracts is the output of the wire contract design phase.
 type ProtoContracts struct {
 	Files []ProtoFile
 }
@@ -56,6 +75,11 @@ type Service interface{ Undefined }
 // Method is a single RPC method on a Service.
 type Method interface{ Undefined }
 
+// Specification is the prose behavioral specification —
+// RFC 2119-style descriptions of how a system must behave,
+// grounded in domain names from the contracts.
+type Specification interface{ Undefined }
+
 // BuiltProject is the output of the implementation phase — a scaffolded,
 // wired Go project satisfying its contracts. Every project built by this
 // workflow carries a runnable specification: that is the domain invariant.
@@ -67,13 +91,8 @@ type BuiltProject interface {
 type GoProject interface{ Undefined }
 
 // GeneratedCode is the output of contract codegen —
-// Go types and service stubs derived from the contracts.
+// Go types and service stubs derived from the wire contracts.
 type GeneratedCode interface{ Undefined }
-
-// CodeArtifact is the output of the model-as-code phase —
-// a Go package expressing a domain model using types, interfaces,
-// and strategy functions as the modeling primitives.
-type CodeArtifact interface{ Undefined }
 
 // RunnableSpecification is the executable form of the spec — Go tests named as
 // RFC 2119 requirements. A passing run means the implementation satisfies its contracts.

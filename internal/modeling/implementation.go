@@ -4,12 +4,12 @@ import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/type
 
 // Implement takes requirements and contracts and produces a BuiltProject —
 // scaffolded Go project, wired services, generated proto types, and a runnable specification.
-func Implement(requirements types.Requirements, contracts types.ProtoContracts) (types.BuiltProject, error) {
+func Implement(requirements types.Requirements, contracts types.Contracts) (types.BuiltProject, error) {
 	project, err := ScaffoldGoProject(requirements)
 	if err != nil {
 		return nil, err
 	}
-	generated, err := GenerateFromContracts(contracts)
+	generated, err := GenerateFromContracts(contracts.Wire)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func ScaffoldGoProject(requirements types.Requirements) (types.GoProject, error)
 	return nil, types.ErrUnimplemented
 }
 
-// GenerateFromContracts runs codegen against the contracts,
+// GenerateFromContracts runs codegen against the wire contracts,
 // producing Go types and service stubs.
 // Leaf: side effect — invokes codegen tooling, writes generated files to disk.
 func GenerateFromContracts(contracts types.ProtoContracts) (types.GeneratedCode, error) {
@@ -33,8 +33,6 @@ func GenerateFromContracts(contracts types.ProtoContracts) (types.GeneratedCode,
 // WireServices connects service implementations to generated code,
 // producing a BuiltProject whose specification can be run.
 // Leaf: side effect — writes Go source files to disk.
-func WireServices(project types.GoProject, generated types.GeneratedCode, contracts types.ProtoContracts) (types.BuiltProject, error) {
+func WireServices(project types.GoProject, generated types.GeneratedCode, contracts types.Contracts) (types.BuiltProject, error) {
 	return nil, types.ErrUnimplemented
 }
-
-

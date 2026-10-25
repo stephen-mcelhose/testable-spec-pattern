@@ -2,10 +2,39 @@ package modeling
 
 import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/types"
 
-// BuildContracts takes requirements and produces machine-readable contracts —
-// proto definitions, OpenAPI specs, ROD resource definitions.
+// ModelDomain takes an idea and produces CodeContracts —
+// Go interfaces and strategy function signatures at layer boundaries.
+// The output is a partial code artifact: structure and intent without implementation.
+// Leaf: backed by the model-as-code skill.
+func ModelDomain(idea types.Idea) (types.CodeContracts, error) {
+	return nil, types.ErrUnimplemented
+}
+
+func DefaultBuildContractStrategy(existing types.Contracts, requirements types.Requirements) (types.Contracts, error) {
+	return BuildContracts(requirements)
+}
+
+// BuildContracts takes requirements and produces the full Contracts —
+// code contracts derived from the domain model and wire contracts from resource design.
+func BuildContracts(requirements types.Requirements, strategies ...types.BuildContractStrategy) (types.Contracts, error) {
+	if strategies == nil {
+		strategies = []types.BuildContractStrategy{DefaultBuildContractStrategy}
+	}
+	var contracts types.Contracts
+	var err error
+	for _, strategy := range strategies {
+		contracts, err = strategy(contracts, requirements)
+		if err != nil {
+			return types.Contracts{}, err
+		}
+	}
+	return contracts, nil
+}
+
+// BuildWireContracts takes requirements and produces ProtoContracts —
+// proto definitions, OpenAPI specs, and ROD resource definitions.
 // It composes resource design, service definition, and proto file generation.
-func BuildContracts(requirements types.Requirements) (types.ProtoContracts, error) {
+func BuildWireContracts(requirements types.Requirements) (types.ProtoContracts, error) {
 	resources, err := DesignResourceModel(requirements)
 	if err != nil {
 		return types.ProtoContracts{}, err

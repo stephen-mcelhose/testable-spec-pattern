@@ -2,12 +2,27 @@ package modeling
 
 import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/types"
 
+func DefaultGatherRequirementStrategy(existing types.Requirements, idea types.Idea) (types.Requirements, error) {
+	return nil, types.ErrUnimplemented
+}
+
 // GatherRequirements takes an idea and produces requirements.
 // The composition of views (use cases, domain sketches, Gherkin scenarios)
 // is determined by the strategy, not fixed here.
 // Leaf: backed by requirements-gathering skills.
-func GatherRequirements(idea types.Idea) (types.Requirements, error) {
-	return nil, types.ErrUnimplemented
+func GatherRequirements(idea types.Idea, strategies ...types.GatherRequirementStrategy) (types.Requirements, error) {
+	if strategies == nil {
+		strategies = []types.GatherRequirementStrategy{DefaultGatherRequirementStrategy}
+	}
+	var requirements types.Requirements
+	var err error
+	for _, strategy := range strategies {
+		requirements, err = strategy(requirements, idea)
+		if err != nil {
+			return types.Requirements(nil), err
+		}
+	}
+	return requirements, nil
 }
 
 // WriteUseCases interrogates an idea and produces a set of use cases —
