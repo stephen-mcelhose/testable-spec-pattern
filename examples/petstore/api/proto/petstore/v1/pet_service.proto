@@ -119,6 +119,10 @@ message DeletePetRequest {
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
   ];
+
+  // Optional freshness token (AIP-154 / AIP-135 protected delete).
+  // When set and mismatched, the delete MUST fail with ABORTED.
+  string etag = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // UploadPhotoRequest is the request for the UploadPhoto custom method.
@@ -172,6 +176,10 @@ message Pet {
   // (-- api-linter: core::0216::state-field-output-only=disabled
   //     Pet state is store-staff-settable, not server-managed. --)
   Pet.State state = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Server-computed freshness token (AIP-154). Clients MAY send it back on
+  // Update; when provided and mismatched, the update MUST fail with ABORTED.
+  string etag = 7 [(google.api.field_behavior) = OPTIONAL];
 
   // State represents the availability of a pet in the store.
   enum State {

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 )
@@ -16,30 +17,30 @@ import (
 // Pet.Name identifies the resource; return the stored Pet; NOT_FOUND if absent;
 // optional Pet.Etag → ABORTED on mismatch (AIP-154). Out of scope: update_mask,
 // allow_missing upsert, LRO, PERMISSION_DENIED, PUT full-replace semantics.
-// Order: shape validation → update (etag optional) → NotFound → Aborted → Internal.
+// Order: proto validation → business rules → update (etag optional) → NotFound → Aborted → Internal.
 func TestPetService_UpdatePet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
 		name string
 
-		req   pet.UpdatePetRequest
+		req   *petstorev1.UpdatePetRequest
 		store stubStore
 
-		want           pet.Pet
+		want           *petstorev1.Pet
 		wantCode       string
 		wantUpdateArgs []updateCall
 	}
 
-	validReq := pet.UpdatePetRequest{
-		Pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
+	validReq := &petstorev1.UpdatePetRequest{
+		Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 	}
 
 	testCases := []testCase{
 		{
 			name: "MUST return InvalidArgument when UpdatePetRequest fails shape validation",
-			req: pet.UpdatePetRequest{
-				Pet: pet.Pet{Name: "fido", DisplayName: "Fido"},
+			req: &petstorev1.UpdatePetRequest{
+				Pet: &petstorev1.Pet{Name: "fido", DisplayName: "Fido"},
 			},
 			wantCode:       "INVALID_ARGUMENT",
 			wantUpdateArgs: nil,
@@ -48,24 +49,24 @@ func TestPetService_UpdatePet(t *testing.T) {
 			name: "MUST update the pet and return the stored Pet",
 			req:  validReq,
 			store: stubStore{
-				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+				updatePet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			},
-			want: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
 			name: "MUST update the pet when etag is omitted",
-			req: pet.UpdatePetRequest{
-				Pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"},
+			req: &petstorev1.UpdatePetRequest{
+				Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"},
 			},
 			store: stubStore{
-				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+				updatePet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			},
-			want: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: ""},
+				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: ""},
 			},
 		},
 		{
@@ -77,7 +78,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "NOT_FOUND",
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
@@ -89,7 +90,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "ABORTED",
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
@@ -100,7 +101,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "INTERNAL",
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 	}
@@ -119,7 +120,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 				var known pet.KnownError
 				require.True(t, errors.As(err, &known), "error MUST be KnownError, got %T: %v", err, err)
 				assert.Equal(t, tc.wantCode, known.Code())
-				assert.Equal(t, pet.Pet{}, got)
+				assert.Nil(t, got)
 				return
 			}
 			require.NoError(t, err)

@@ -19,3 +19,4 @@
 ## [2026-10-24] add | docs/research/aip-proto-learnings.md — AIP Proto Learnings iter-1 Petstore (spike)
 ## [2026-10-24] edit | docs/index.md — removed duplicate ADR-006 entry, removed broken evals/ rubric reference, added aip-proto-learnings
 ## [2026-10-24] edit | README.md — added resource-oriented-design skill to skills table
+## [2026-10-25] ingest | docs/research/implementation/grpc-methods/process.md — gRPC method implementation process (proto → business rules → storage)

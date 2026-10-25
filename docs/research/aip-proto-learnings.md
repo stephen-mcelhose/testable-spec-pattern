@@ -115,6 +115,10 @@ These learnings have been incorporated into:
 
 For future proto work: run api-linter early and often. The violations are highly informative — treat them as a checklist rather than an obstacle.
 
+## Related
+
+- [gRPC method implementation process](./implementation/grpc-methods/process.md) — how generated Pet RPCs are filled out after the proto is clean
+
 ## References
 
 - [AIP-121](https://google.aip.dev/121) — Resource-oriented design
