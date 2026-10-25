@@ -1,0 +1,110 @@
+{
+  "skill_name": "model-as-code",
+  "description": "Evals for the model-as-code skill. Each eval supplies a domain idea and a set of verifiable expectations against the Go output. A human grades the qualitative rubric; mechanical checks are grep/build assertions that can be verified against the produced files.",
+  "mechanical_checks": {
+    "description": "These apply to every eval run. All must pass before qualitative grading begins.",
+    "checks": [
+      "`go build ./...` exits 0 — the model must compile",
+      "`grep -r panic .` returns nothing — no panics, ever",
+      "Every leaf function has a `// Leaf:` comment explaining why it is a leaf",
+      "No `type X Strategy` without a doc comment that names the backing external skill",
+      "No struct field typed `Undefined` exists without a downstream function that explicitly receives or returns the owning type"
+    ]
+  },
+  "qualitative_rubric": {
+    "description": "Human-graded. One pass/fail call per item, graded against the full output.",
+    "items": [
+      "Top-level operations (function signatures) are named before any type's internal structure is filled in — the ordering of declarations in the file reflects this discipline",
+      "No type has internal structure (struct fields, interface methods beyond Undefined) that was not forced by a composition step",
+      "No implementation detail appears in any type or function name — no DB schema terms, HTTP verbs, library names, protocol names, or framework identifiers",
+      "Derived non-obvious decisions are documented in comments — if something was inferred from the idea, there is a comment saying so",
+      "When the idea is ambiguous, the model asked for clarification rather than inventing an answer"
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "what_this_tests": "Core subject/relation extraction — does the model name the right domain types without leaking implementation detail?",
+      "prompt": "Model a veterinary clinic booking system in Go. A pet owner brings their pet to a clinic, books an appointment, a vet is assigned to the pet, the visit is recorded, and a billing record is produced.",
+      "expected_output": "A Go package with Owner, Pet (or Patient), Vet, Appointment, VisitRecord, and BillingRecord as named types; all declared as `interface{ Undefined }` initially; top-level functions BookAppointment, AssignVet, RecordVisit, and ProduceBillingRecord (or close equivalents) before any type internals are expanded. No struct fields, no DB types, no HTTP types.",
+      "expectations": [
+        "A type named Patient or Pet appears in the output",
+        "A type named Owner appears in the output",
+        "A type named Vet appears in the output",
+        "A type named Appointment appears in the output",
+        "A type named VisitRecord (or Visit) appears in the output",
+        "A type named BillingRecord (or Invoice or Bill) appears in the output",
+        "A function that books or schedules an appointment takes Owner (or equivalent) and Patient/Pet (or equivalent) as inputs and returns Appointment",
+        "A function that assigns a vet takes Appointment as input and returns Appointment or an updated appointment type",
+        "A function that records a visit takes Appointment as input and returns VisitRecord",
+        "A function that produces a billing record takes VisitRecord as input and returns BillingRecord",
+        "No type or function name contains a technology term: no Row, Table, DB, Handler, Request, Response, Controller, Repository, or similar",
+        "Types that have no internal structure required by the model are declared as `interface{ Undefined }`, not as structs with speculative fields",
+        "No struct field is typed `*sql.DB`, `http.Client`, or any other infrastructure type",
+        "All leaf functions return `ErrUnimplemented`, not nil, not a zero value, and not panic"
+      ]
+    },
+    {
+      "id": 2,
+      "what_this_tests": "Lifecycle stage separation — does the model treat Cart, Order, and Payment as distinct types rather than a single blob that mutates?",
+      "prompt": "Model a shopping cart checkout flow in Go. A customer adds items to a cart, checks out, payment is processed, and an order is confirmed.",
+      "expected_output": "A Go package with Customer, Item (or Product or CartItem), Cart, Order, Payment, and OrderConfirmation (or Confirmation) as separate named types; functions AddItemToCart, Checkout, ProcessPayment, ConfirmOrder (or close equivalents). Cart and Order must be distinct types. Payment must be distinct from Order. No payment-provider names anywhere.",
+      "expectations": [
+        "A type named Customer appears in the output",
+        "A type named Cart appears in the output",
+        "A type named Order appears in the output",
+        "Cart and Order are declared as separate, distinct types — not aliases or the same type",
+        "A type named Payment appears in the output and is distinct from Order",
+        "A type representing the confirmed outcome (OrderConfirmation, Confirmation, or similar) appears in the output",
+        "A function that adds an item to a cart takes Customer and an item type as inputs and returns Cart",
+        "A checkout function exists and takes Cart as a direct input parameter",
+        "A payment processing function exists as a named top-level operation",
+        "An order confirmation function exists as a named top-level operation",
+        "No type or function name contains a payment provider name: no Stripe, Braintree, PayPal, Square, Adyen, or similar",
+        "No type or function name contains a technology term: no Handler, Controller, Repository, Row, or similar",
+        "Types that have no internal structure required by the model are declared as `interface{ Undefined }` — Cart does not have speculative line-item fields unless a downstream function forces them",
+        "All leaf functions return `ErrUnimplemented`"
+      ]
+    },
+    {
+      "id": 3,
+      "what_this_tests": "Strategy seam restraint — does the model avoid introducing Strategy types when no named external skill backs the step?",
+      "prompt": "Model a CI/CD pipeline in Go. Code is pushed, tests run, an artifact is built, and deployment is triggered.",
+      "expected_output": "A Go package with Commit (or SourceCode or PushedCode), TestResult, Artifact (or BuiltArtifact), and Deployment as named types; top-level functions such as TriggerPipeline, RunTests, BuildArtifact, TriggerDeployment. All functions are leaves or compositions — no Strategy types, because the idea names no external skill. No CI/CD platform names, no build tool names.",
+      "expectations": [
+        "A type representing pushed code (Commit, SourceCode, PushedCode, or similar) appears in the output",
+        "A type named TestResult (or TestReport, or similar) appears in the output",
+        "A type named Artifact or BuiltArtifact appears in the output",
+        "A type named Deployment appears in the output",
+        "The four lifecycle stages — push, test, build, deploy — each correspond to at least one named function",
+        "No Strategy type (a named function type used as a plug-in seam) appears in the output — the idea names no external skill to back one",
+        "No type or function name contains a CI/CD platform name: no Jenkins, GitHub, GitLab, CircleCI, ArgoCD, Tekton, or similar",
+        "No type or function name contains a build tool name: no Maven, Gradle, Bazel, Make, Webpack, or similar",
+        "No type or function name contains a test framework name: no JUnit, pytest, Mocha, Jest, or similar",
+        "A predicate that checks whether a build or test passed returns bool — not error, not a wrapper type",
+        "All leaf functions return `ErrUnimplemented`"
+      ]
+    },
+    {
+      "id": 4,
+      "what_this_tests": "Classic interview domain — well-documented expected decomposition enables cross-run comparison. Tests subject extraction, predicate modeling, and leaf discipline on a familiar domain.",
+      "prompt": "Model a library system in Go. A patron checks out a book, a book can be reserved, overdue fines are calculated, and a book is returned.",
+      "expected_output": "A Go package with Patron, Book, Loan (the checkout record — distinct from Book), Reservation, and Fine as named types; functions CheckOutBook, ReserveBook, CalculateFine, ReturnBook (or RecordReturn). An IsOverdue predicate returns bool. No Strategy types. No technology terms.",
+      "expectations": [
+        "A type named Patron appears in the output",
+        "A type named Book appears in the output",
+        "A type representing the checkout record (Loan, Checkout, BorrowRecord, or similar) appears in the output and is distinct from Book",
+        "A type named Reservation appears in the output",
+        "A type named Fine (or OverdueFine) appears in the output",
+        "A function that checks out a book takes Patron and Book as inputs and returns a Loan type",
+        "A function that reserves a book takes Patron and Book as inputs and returns Reservation",
+        "A function that calculates a fine takes a Loan type as input and returns Fine",
+        "A function that returns a book takes a Loan type as input",
+        "Any predicate for overdue status (IsOverdue or equivalent) returns bool — not error, not a wrapper type",
+        "No Strategy types appear in the output — the idea names no external skill",
+        "No type or function name contains a technology term: no DB, Table, Row, API, Handler, Controller, or similar",
+        "All leaf functions return `ErrUnimplemented`"
+      ]
+    }
+  ]
+}
