@@ -34,3 +34,4 @@ go.work.sum
 !.env.example
 *.pem
 credentials.json
+.agents/skills/model-as-code-workspace/
