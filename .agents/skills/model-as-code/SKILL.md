@@ -31,6 +31,12 @@ Every type and function in the model is built from these two.
 
 ## The process
 
+### 0. Specify only what you know
+
+Model only what is stated in the idea or directly derivable from it. If you derive something non-obvious, document it in a comment. If something is needed to model a function but not given, ask rather than invent. This is design — it is expected to be incomplete and revisited.
+
+`Undefined` is not a failure. It is the model being honest.
+
 ### 1. Name the top-level operations
 
 Name what the system does as function signatures — inputs, outputs, errors. Name all types as you go; prefer `type <DomainName> interface{ Undefined }` as the initial form. Do not fill in the internals of a type until they are necessary to define something else — internals are implementation details until proven otherwise.
@@ -87,12 +93,20 @@ func ScheduleAppointment(patient Patient, slot TimeSlot) (Appointment, error)
 
 **Leaf:** return zero + `ErrUnimplemented`. Add a `// Leaf:` comment explaining why.
 
-**Strategy seam:** when a step belongs to another skill, declare a function type. The doc comment names the skill:
+**Strategy seam:** only introduce a Strategy type when the step is explicitly backed by a named external skill. If you don't know which skill backs it, don't add it.
 
 ```go
 // SchedulingStrategy is backed by the scheduling-engine skill.
 type SchedulingStrategy func(patient Patient, clinic Clinic) (Appointment, error)
 ```
+
+**Predicates** return `bool`, not `error` and not a wrapper type:
+
+```go
+func IsVerifiedProject(project BuiltProject) bool
+```
+
+**Comments:** let each symbol speak for itself. Banner-style section dividers (`// ------`) are noise — omit them.
 
 ---
 
@@ -100,6 +114,7 @@ type SchedulingStrategy func(patient Patient, clinic Clinic) (Appointment, error
 
 ```bash
 go build ./...
+grep -r panic .
 ```
 
-The model must compile. Fix every error before delivering.
+The model must compile and must not contain any `panic`. Fix both before delivering.
