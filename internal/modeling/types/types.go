@@ -31,26 +31,9 @@ type Requirements struct {
 // UseCase describes a single actor–goal interaction with the system.
 type UseCase interface{ Undefined }
 
-// Actor is an entity that interacts with the system to achieve a goal.
-type Actor interface{ Undefined }
-
-// Goal is what an Actor is trying to accomplish.
-type Goal interface{ Undefined }
-
 // DomainSketch is a lightweight model of the domain entities and their
 // relations, produced before any wire format is chosen.
-type DomainSketch struct {
-	Types     []DomainType
-	Relations []DomainRelation
-}
-
-// DomainType is a named entity in the domain — not a Go type, not a proto
-// message, just a named concept with a role.
-type DomainType interface{ Undefined }
-
-// DomainRelation is a directional connection between two DomainTypes —
-// ownership, association, or dependency.
-type DomainRelation interface{ Undefined }
+type DomainSketch interface{ Undefined }
 
 // GherkinScenario is a Given/When/Then specification of a single behaviour,
 // grounded in domain names.
@@ -78,7 +61,7 @@ type Method interface{ Undefined }
 // wired Go project satisfying its contracts. Every project built by this
 // workflow carries a runnable specification: that is the domain invariant.
 type BuiltProject interface {
-	GetSpecification() RunnableSpecification
+	Specification() RunnableSpecification
 }
 
 // GoProject is a scaffolded Go module with idiomatic layout.
@@ -93,7 +76,6 @@ type GeneratedCode interface{ Undefined }
 // and strategy functions as the modeling primitives.
 type CodeArtifact interface{ Undefined }
 
-
 // RunnableSpecification is the executable form of the spec — Go tests named as
 // RFC 2119 requirements. A passing run means the implementation satisfies its contracts.
 type RunnableSpecification interface {
@@ -104,7 +86,5 @@ type RunnableSpecification interface {
 
 // IsVerifiedProject reports whether a BuiltProject's specification passes.
 func IsVerifiedProject(project BuiltProject) bool {
-	return project.GetSpecification().Run() == nil
+	return project.Specification().Run() == nil
 }
-
-

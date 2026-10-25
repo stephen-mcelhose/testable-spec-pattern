@@ -37,8 +37,4 @@ func WireServices(project types.GoProject, generated types.GeneratedCode, contra
 	return nil, types.ErrUnimplemented
 }
 
-// ModelAsCode takes an idea and produces a CodeArtifact —
-// a Go package modeling the idea using types, interfaces, and strategy functions.
-func ModelAsCode(idea types.Idea) (types.CodeArtifact, error) {
-	return nil, types.ErrUnimplemented
-}
+
