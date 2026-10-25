@@ -6,17 +6,15 @@ AIP refs: [132 List](https://google.aip.dev/132) · [133 Create](https://google.
 
 ## Agent lookup
 
-One folder. Open by method via test file / suite name:
+One folder. Open by **test function name** inside `service_test.go` (one file per source type — not one file per method):
 
 | Need | Open |
 |------|------|
-| Create (full skeleton) | `service_create_test.go` → `TestPetService_CreatePet` |
-| Get | `service_get_test.go` → `TestPetService_GetPet` |
-| Update / Delete / List | `service_*_test.go` → matching `TestPetService_*` |
+| Create (full skeleton) | `service_test.go` → `TestPetService_CreatePet` |
+| Get / Update / Delete / List | `service_test.go` → matching `TestPetService_*` |
 | Types / Store / impl | `pet.go`, `service.go` (`Store` at usage site) |
-| Test stub | `stubs_test.go` |
 
-No per-RPC subdirs — MUST names + `service_<method>_test.go` are enough for lookup.
+No per-RPC subdirs or `service_<method>_test.go` splits — MUST names + `TestPetService_<Method>` are enough for lookup.
 
 ## Contract skeleton (every method)
 

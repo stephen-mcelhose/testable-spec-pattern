@@ -77,6 +77,7 @@ If any item is unchecked: comment on the issue with what is missing (`gh issue c
 | Skill | Purpose |
 | ----- | ------- |
 | [`go-behavioral-spec`](.agents/skills/go-behavioral-spec/SKILL.md) | Write Go tests as RFC 2119 behavioral specs |
+| [`rfc-2119-spec-writer`](.agents/skills/rfc-2119-spec-writer/SKILL.md) | Draft prose technical specs with RFC 2119 keywords (behaviors only) |
 | [`docs-wiki`](.agents/skills/docs-wiki/SKILL.md) | Manage the `docs/` knowledge base |
 
 ### Planned

@@ -9,7 +9,7 @@ timestamp: 2026-10-23T22:45:43Z
 # Ideation: Contract-First as the Foundation
 
 **Status:** hypothesis — not yet validated as discipline  
-**Related:** [domain-names-as-bridge.md](./domain-names-as-bridge.md)
+**Related:** [domain-names-as-bridge.md](./domain-names-as-bridge.md), [gRPC method implementation process](../research/implementation/grpc-methods/process.md)
 
 ---
 
