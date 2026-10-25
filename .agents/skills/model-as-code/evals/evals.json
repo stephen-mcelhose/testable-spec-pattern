@@ -25,8 +25,8 @@
     {
       "id": 1,
       "what_this_tests": "Core subject/relation extraction — does the model name the right domain types without leaking implementation detail?",
-      "prompt": "Model a veterinary clinic booking system in Go. A pet owner books an appointment, a vet is assigned, the visit is recorded, and a billing record is produced.",
-      "expected_output": "A Go package with Owner, Patient (or Pet), Vet, Appointment, VisitRecord, and BillingRecord as named types; all declared as `interface{ Undefined }` initially; top-level functions BookAppointment, AssignVet, RecordVisit, and ProduceBillingRecord (or close equivalents) before any type internals are expanded. No struct fields, no DB types, no HTTP types.",
+      "prompt": "Model a veterinary clinic booking system in Go. A pet owner brings their pet to a clinic, books an appointment, a vet is assigned to the pet, the visit is recorded, and a billing record is produced.",
+      "expected_output": "A Go package with Owner, Pet (or Patient), Vet, Appointment, VisitRecord, and BillingRecord as named types; all declared as `interface{ Undefined }` initially; top-level functions BookAppointment, AssignVet, RecordVisit, and ProduceBillingRecord (or close equivalents) before any type internals are expanded. No struct fields, no DB types, no HTTP types.",
       "expectations": [
         "A type named Patient or Pet appears in the output",
         "A type named Owner appears in the output",
@@ -57,9 +57,9 @@
         "A type named Payment appears in the output and is distinct from Order",
         "A type representing the confirmed outcome (OrderConfirmation, Confirmation, or similar) appears in the output",
         "A function that adds an item to a cart takes Customer and an item type as inputs and returns Cart",
-        "A function that checks out takes Cart as input and returns Order",
-        "A function that processes payment takes Order as input and returns Payment",
-        "A function that confirms the order takes Payment as input and returns a confirmation type",
+        "A checkout function exists and takes Cart as a direct input parameter",
+        "A payment processing function exists as a named top-level operation",
+        "An order confirmation function exists as a named top-level operation",
         "No type or function name contains a payment provider name: no Stripe, Braintree, PayPal, Square, Adyen, or similar",
         "No type or function name contains a technology term: no Handler, Controller, Repository, Row, or similar",
         "Types that have no internal structure required by the model are declared as `interface{ Undefined }` — Cart does not have speculative line-item fields unless a downstream function forces them",
