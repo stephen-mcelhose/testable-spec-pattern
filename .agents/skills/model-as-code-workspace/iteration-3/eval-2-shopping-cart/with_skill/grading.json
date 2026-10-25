@@ -1,0 +1,108 @@
+{
+  "eval_id": 2,
+  "eval_name": "shopping-cart",
+  "skill_version": "1.2.0",
+  "mechanical_checks": [
+    {"check": "go build ./... exits 0", "passed": true, "evidence": "go build succeeded"},
+    {"check": "No panic() calls", "passed": true, "evidence": "grep -rn 'panic(' returned nothing"},
+    {"check": "Every leaf has a // Leaf: comment", "passed": true, "evidence": "addItem, checkout, processPayment, confirmOrder all have // Leaf: comments"},
+    {"check": "No Strategy type without named-skill doc comment", "passed": true, "evidence": "No Strategy types defined"},
+    {"check": "No struct field typed Undefined without a consuming function", "passed": true, "evidence": "No struct fields; all types are interface{ Undefined }"}
+  ],
+  "expectations": [
+    {
+      "text": "A type named Customer appears in the output",
+      "passed": true,
+      "evidence": "type Customer interface{ Undefined } — present and used as parameter in AddItem and Checkout."
+    },
+    {
+      "text": "A type named Cart appears in the output",
+      "passed": true,
+      "evidence": "type Cart interface{ Undefined }"
+    },
+    {
+      "text": "A type named Order appears in the output",
+      "passed": true,
+      "evidence": "type Order interface{ Undefined }"
+    },
+    {
+      "text": "Cart and Order are declared as separate, distinct types — not aliases or the same type",
+      "passed": true,
+      "evidence": "Cart and Order are separate interface{ Undefined } declarations."
+    },
+    {
+      "text": "A type named Payment appears in the output and is distinct from Order",
+      "passed": true,
+      "evidence": "type Payment interface{ Undefined } — distinct from Order."
+    },
+    {
+      "text": "A type representing the confirmed outcome (OrderConfirmation, Confirmation, or similar) appears in the output",
+      "passed": false,
+      "evidence": "No confirmation type. ConfirmOrder(order Order) (Order, error) returns Order — confirmation is a state on Order, not a distinct type."
+    },
+    {
+      "text": "A function that adds an item to a cart takes Customer and an item type as inputs and returns Cart",
+      "passed": true,
+      "evidence": "AddItem(customer Customer, cart Cart, item Item) (Cart, error) — Customer present, Cart returned."
+    },
+    {
+      "text": "A function that checks out takes Cart as input and returns Order",
+      "passed": false,
+      "evidence": "Checkout(customer Customer, cart Cart) (Payment, error) — returns Payment, not Order. The model interprets checkout as producing a payment request rather than an order directly."
+    },
+    {
+      "text": "A function that processes payment takes Order as input and returns Payment",
+      "passed": false,
+      "evidence": "ProcessPayment(payment Payment) (Order, error) — takes Payment and returns Order. Direction is reversed from expectation: the model treats payment as input and order as output of processing."
+    },
+    {
+      "text": "A function that confirms the order takes Payment as input and returns a confirmation type",
+      "passed": false,
+      "evidence": "ConfirmOrder(order Order) (Order, error) — takes Order, not Payment. No confirmation type returned."
+    },
+    {
+      "text": "No type or function name contains a payment provider name: no Stripe, Braintree, PayPal, Square, Adyen, or similar",
+      "passed": true,
+      "evidence": "No payment provider names found."
+    },
+    {
+      "text": "No type or function name contains a technology term: no Handler, Controller, Repository, Row, or similar",
+      "passed": true,
+      "evidence": "All names are domain vocabulary."
+    },
+    {
+      "text": "Types that have no internal structure required by the model are declared as `interface{ Undefined }` — Cart does not have speculative line-item fields unless a downstream function forces them",
+      "passed": true,
+      "evidence": "All 5 types are interface{ Undefined }. No speculative fields."
+    },
+    {
+      "text": "All leaf functions return `ErrUnimplemented`",
+      "passed": true,
+      "evidence": "addItem, checkout, processPayment, confirmOrder all return ErrUnimplemented."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 5,
+    "total": 14,
+    "pass_rate": 0.643
+  },
+  "vs_iteration_1": {
+    "iteration_1_pass_rate": 0.571,
+    "delta": "+0.071",
+    "improvement_source": "Customer now present (+1). Payment now a named type (+1). AddItem includes Customer parameter (+1). But Checkout now returns Payment instead of Order (-1 on expectation 8, which previously passed).",
+    "regression": "Expectation 8 (Checkout returns Order) — v1 passed this (Checkout returned Order directly); v3 fails it (Checkout returns Payment). The model's lifecycle chain is differently wrong, not correctly right."
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "A function that checks out takes Cart as input and returns Order",
+        "reason": "The model's interpretation (Checkout→Payment, ProcessPayment→Order) is a reasonable alternative lifecycle design. The expectation as written assumes a specific flow that isn't the only valid one. Consider relaxing to 'Checkout, ProcessPayment, and ConfirmOrder are all named as top-level operations' without dictating exact input/output shapes."
+      },
+      {
+        "reason": "The missing OrderConfirmation type persists. Since 'an order is confirmed' is explicitly stated in the prompt, this is a fair expectation. The model treats confirmation as a state transition on Order rather than a distinct outcome type. This may be worth adding a note about in the skill: outcomes should be distinct types, not state transitions on existing types."
+      }
+    ],
+    "overall": "9/14 (64%). Customer and Payment are now correctly present — the subject enumeration step fixed the main failure from v1. The remaining failures are about lifecycle chain shape (expectations may be over-prescriptive) and the missing OrderConfirmation distinct type."
+  }
+}

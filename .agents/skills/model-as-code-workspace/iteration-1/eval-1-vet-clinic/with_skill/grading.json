@@ -1,0 +1,116 @@
+{
+  "eval_id": 1,
+  "eval_name": "vet-clinic",
+  "mechanical_checks": [
+    {"check": "go build ./... exits 0", "passed": true, "evidence": "go build ran without errors"},
+    {"check": "No panic() calls", "passed": true, "evidence": "grep -rn 'panic(' found nothing; 'panic' word appears only in the var comment 'Never panic in a model'"},
+    {"check": "Every leaf has a // Leaf: comment", "passed": true, "evidence": "createUnassignedAppointment, assignVetToAppointment, finalizeVisitRecord, generateBilling all have // Leaf: comments"},
+    {"check": "No Strategy type without named-skill doc comment", "passed": true, "evidence": "No Strategy types defined"},
+    {"check": "No struct field typed Undefined without a consuming function", "passed": true, "evidence": "No struct fields at all; all types are interface{ Undefined }"}
+  ],
+  "expectations": [
+    {
+      "text": "A type named Patient or Pet appears in the output",
+      "passed": false,
+      "evidence": "No Patient or Pet type declared. The model created PetOwner (the owner) and AppointmentRequest (an abstract bundle). The animal being treated is not a named domain type."
+    },
+    {
+      "text": "A type named Owner appears in the output",
+      "passed": true,
+      "evidence": "PetOwner interface{ Undefined } is declared — owner-equivalent accepted."
+    },
+    {
+      "text": "A type named Vet appears in the output",
+      "passed": true,
+      "evidence": "type Vet interface{ Undefined } declared at line 23."
+    },
+    {
+      "text": "A type named Appointment appears in the output",
+      "passed": true,
+      "evidence": "type Appointment interface{ Undefined } declared at line 20."
+    },
+    {
+      "text": "A type named VisitRecord (or Visit) appears in the output",
+      "passed": true,
+      "evidence": "type VisitRecord interface{ Undefined } declared at line 26."
+    },
+    {
+      "text": "A type named BillingRecord (or Invoice or Bill) appears in the output",
+      "passed": true,
+      "evidence": "type BillingRecord interface{ Undefined } declared at line 29."
+    },
+    {
+      "text": "A function that books or schedules an appointment takes Owner (or equivalent) and Patient/Pet (or equivalent) as inputs and returns Appointment",
+      "passed": false,
+      "evidence": "BookAppointment(owner PetOwner, request AppointmentRequest) (Appointment, error) — takes PetOwner and an abstract AppointmentRequest bundle. No explicit Patient/Pet parameter. The animal is absorbed into the request."
+    },
+    {
+      "text": "A function that assigns a vet takes Appointment as input and returns Appointment or an updated appointment type",
+      "passed": true,
+      "evidence": "AssignVet(appointment Appointment, vet Vet) (Appointment, error) — correct signature."
+    },
+    {
+      "text": "A function that records a visit takes Appointment as input and returns VisitRecord",
+      "passed": true,
+      "evidence": "RecordVisit(appointment Appointment) (VisitRecord, error) — correct signature."
+    },
+    {
+      "text": "A function that produces a billing record takes VisitRecord as input and returns BillingRecord",
+      "passed": true,
+      "evidence": "ProduceBilling(visit VisitRecord) (BillingRecord, error) — correct signature."
+    },
+    {
+      "text": "No type or function name contains a technology term: no Row, Table, DB, Handler, Request, Response, Controller, Repository, or similar",
+      "passed": false,
+      "evidence": "AppointmentRequest contains 'Request', which is in the forbidden list. Debatable: 'Request' here is used as a domain noun ('a request for an appointment'), not as HTTP vocabulary, but the expectation text explicitly includes 'Request' as a forbidden term."
+    },
+    {
+      "text": "Types that have no internal structure required by the model are declared as `interface{ Undefined }`, not as structs with speculative fields",
+      "passed": true,
+      "evidence": "All 6 types (PetOwner, AppointmentRequest, Appointment, Vet, VisitRecord, BillingRecord) are declared as interface{ Undefined }. No speculative fields."
+    },
+    {
+      "text": "No struct field is typed `*sql.DB`, `http.Client`, or any other infrastructure type",
+      "passed": true,
+      "evidence": "No struct definitions in the file at all."
+    },
+    {
+      "text": "All leaf functions return `ErrUnimplemented`, not nil, not a zero value, and not panic",
+      "passed": true,
+      "evidence": "createUnassignedAppointment, assignVetToAppointment, finalizeVisitRecord, generateBilling all return nil, ErrUnimplemented."
+    }
+  ],
+  "summary": {
+    "passed": 11,
+    "failed": 3,
+    "total": 14,
+    "pass_rate": 0.786
+  },
+  "claims": [
+    {
+      "claim": "The model followed the top-level operations first discipline",
+      "type": "process",
+      "verified": true,
+      "evidence": "BookAppointment, AssignVet, RecordVisit, ProduceBilling are declared before any leaf implementations"
+    },
+    {
+      "claim": "No implementation detail leaked into names",
+      "type": "quality",
+      "verified": false,
+      "evidence": "AppointmentRequest contains 'Request' which sits on the boundary. The rest of the names (PetOwner, Vet, Appointment, VisitRecord, BillingRecord) are clean domain terms."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "A type named Patient or Pet appears in the output",
+        "reason": "Worth keeping — the animal as a distinct domain entity is a real design decision the skill should surface. The model collapsed it into AppointmentRequest, which is a notable omission."
+      },
+      {
+        "assertion": "No type or function name contains a technology term: no Row, Table, DB, Handler, Request, Response, Controller, Repository, or similar",
+        "reason": "Consider splitting into two expectations: one for pure infrastructure terms (DB, Row, Handler) and one specifically for 'Request/Response'. AppointmentRequest is a genuinely ambiguous case — the expectation as written creates borderline verdicts."
+      }
+    ],
+    "overall": "11/14. Core lifecycle chain is correct (Appointment→VisitRecord→BillingRecord). The main miss is that the animal/patient is not a named domain type — it was absorbed into AppointmentRequest."
+  }
+}

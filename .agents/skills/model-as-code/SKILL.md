@@ -4,7 +4,7 @@ description: Model a domain using Go types as the modeling language. Use when so
 license: MIT
 allowed-tools: Read Glob Grep Write Edit Bash(go build:*) Bash(go vet:*)
 metadata:
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
 # model-as-code
@@ -37,44 +37,54 @@ Model only what is stated in the idea or directly derivable from it. If you deri
 
 `Undefined` is not a failure. It is the model being honest.
 
-### 1. Name the top-level operations
+### 1. Enumerate subjects
 
-Name what the system does as function signatures — inputs, outputs, errors. Name all types as you go; prefer `type <DomainName> interface{ Undefined }` as the initial form. Do not fill in the internals of a type until they are necessary to define something else — internals are implementation details until proven otherwise.
+Before writing any function signature, list every entity in the idea. Entities come in four kinds:
+
+- **Actors** — who initiates or performs actions (e.g., the person who books, pays, or requests something)
+- **Objects** — what is acted on (e.g., the thing being booked, moved, or changed)
+- **Records** — what gets created or persisted as a result (e.g., a log, a receipt, an audit entry)
+- **Outcomes** — the final deliverable of a process (e.g., a confirmation, a report, a certificate)
+
+The grammatical actor of a sentence is still a domain entity. *"A driver parks a vehicle"* produces two subjects: `Driver` and `Vehicle`. Don't let an actor dissolve into a function parameter without first declaring it as a type.
+
+If domain knowledge implies an entity the idea doesn't name, surface it as a question rather than inventing or ignoring it.
+
+Each subject becomes a named interface embedding `Undefined` before any function is written:
 
 ```go
-func BookAppointment(request AppointmentRequest) (Appointment, error)
-func RecordVisit(appointment Appointment) (VisitRecord, error)
+type Driver  interface{ Undefined }
+type Vehicle interface{ Undefined }
+type Spot    interface{ Undefined }
+```
+
+### 2. Name the top-level operations
+
+With all subjects declared, name what the system does as function signatures — inputs, outputs, errors. Prefer `type <DomainName> interface{ Undefined }` for any new type you encounter. Do not fill in the internals of a type until they are necessary to define something else — internals are implementation details until proven otherwise.
+
+```go
+func ParkVehicle(driver Driver, vehicle Vehicle) (ParkingTicket, error)
+func ReleaseVehicle(ticket ParkingTicket) (Receipt, error)
 ```
 
 Filling in details before you understand the system as a whole is the trap this step avoids.
 
-### 2. Decompose into subjects and relations
+### 3. Decompose into relations and iterate
 
 ```
-subjects  := ExtractSubjects(idea)
 relations := ExtractRelationships(idea, subjects)
 
-for each subject  → type <Subject> interface{ Undefined }
 for each relation → func <Verb><Subject>(subjectA, subjectB?) (<Result>, error)
   if the function composes sub-steps  → call them explicitly in the body
   if the function is a leaf           → return zero, ErrUnimplemented
   if the function delegates to a skill → declare a Strategy type instead
 ```
 
-### 3. Iterate
-
 Expand each non-leaf function the same way: express it as a composition, then decompose further. Stop when every function is either a composition of named sub-functions or a leaf returning `ErrUnimplemented`.
 
 ---
 
 ## Subjects → types
-
-Each subject becomes a named interface embedding `Undefined`:
-
-```go
-// Patient is a person receiving veterinary care.
-type Patient interface{ Undefined }
-```
 
 Promote `Undefined` to a struct only when the fields matter to the model — not speculatively.
 
@@ -87,8 +97,8 @@ Names — of types and functions — come from the domain, not from implementati
 Each relation becomes a named function. The name is the claim:
 
 ```go
-// ScheduleAppointment books a patient into a time slot.
-func ScheduleAppointment(patient Patient, slot TimeSlot) (Appointment, error)
+// AssignSpot allocates a parking spot to a vehicle.
+func AssignSpot(vehicle Vehicle, zone Zone) (Spot, error)
 ```
 
 **Composed:** call sub-functions in the body — make the structure visible.
@@ -98,8 +108,8 @@ func ScheduleAppointment(patient Patient, slot TimeSlot) (Appointment, error)
 **Strategy seam:** only introduce a Strategy type when the step is explicitly backed by a named external skill. If you don't know which skill backs it, don't add it.
 
 ```go
-// SchedulingStrategy is backed by the scheduling-engine skill.
-type SchedulingStrategy func(patient Patient, clinic Clinic) (Appointment, error)
+// SpotSelectionStrategy is backed by the space-optimizer skill.
+type SpotSelectionStrategy func(vehicle Vehicle, zone Zone) (Spot, error)
 ```
 
 **Predicates** return `bool`, not `error` and not a wrapper type:

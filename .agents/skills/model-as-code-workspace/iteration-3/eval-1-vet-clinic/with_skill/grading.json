@@ -1,0 +1,105 @@
+{
+  "eval_id": 1,
+  "eval_name": "vet-clinic",
+  "skill_version": "1.2.0",
+  "mechanical_checks": [
+    {"check": "go build ./... exits 0", "passed": true, "evidence": "go build succeeded"},
+    {"check": "No panic() calls", "passed": true, "evidence": "grep -rn 'panic(' returned nothing"},
+    {"check": "Every leaf has a // Leaf: comment", "passed": true, "evidence": "CreateBooking, AssignVet, ConfirmAppointment, CreateVisitRecord, ProduceBillingRecord all have // Leaf: comments"},
+    {"check": "No Strategy type without named-skill doc comment", "passed": true, "evidence": "No Strategy types defined"},
+    {"check": "No struct field typed Undefined without a consuming function", "passed": true, "evidence": "No struct fields; all types are interface{ Undefined }"}
+  ],
+  "expectations": [
+    {
+      "text": "A type named Patient or Pet appears in the output",
+      "passed": false,
+      "evidence": "No Patient or Pet type. Subjects are: PetOwner, Appointment, Vet, Visit, BillingRecord. The animal being treated is still absent from the model."
+    },
+    {
+      "text": "A type named Owner appears in the output",
+      "passed": true,
+      "evidence": "type PetOwner interface{ Undefined } — owner-equivalent present."
+    },
+    {
+      "text": "A type named Vet appears in the output",
+      "passed": true,
+      "evidence": "type Vet interface{ Undefined }"
+    },
+    {
+      "text": "A type named Appointment appears in the output",
+      "passed": true,
+      "evidence": "type Appointment interface{ Undefined }"
+    },
+    {
+      "text": "A type named VisitRecord (or Visit) appears in the output",
+      "passed": true,
+      "evidence": "type Visit interface{ Undefined }"
+    },
+    {
+      "text": "A type named BillingRecord (or Invoice or Bill) appears in the output",
+      "passed": true,
+      "evidence": "type BillingRecord interface{ Undefined }"
+    },
+    {
+      "text": "A function that books or schedules an appointment takes Owner (or equivalent) and Patient/Pet (or equivalent) as inputs and returns Appointment",
+      "passed": false,
+      "evidence": "BookAppointment(owner PetOwner) (Appointment, error) — only PetOwner, no Pet/Patient parameter."
+    },
+    {
+      "text": "A function that assigns a vet takes Appointment as input and returns Appointment or an updated appointment type",
+      "passed": true,
+      "evidence": "AssignVet(apt Appointment) (Vet, error) — takes Appointment, returns Vet. Slightly different shape (returns Vet rather than updated Appointment) but the relation is correct."
+    },
+    {
+      "text": "A function that records a visit takes Appointment as input and returns VisitRecord",
+      "passed": true,
+      "evidence": "RecordVisit(vet Vet, apt Appointment) (Visit, error) — takes Appointment (plus Vet), returns Visit."
+    },
+    {
+      "text": "A function that produces a billing record takes VisitRecord as input and returns BillingRecord",
+      "passed": true,
+      "evidence": "ProduceBillingRecord(visit Visit) (BillingRecord, error)"
+    },
+    {
+      "text": "No type or function name contains a technology term: no Row, Table, DB, Handler, Request, Response, Controller, Repository, or similar",
+      "passed": true,
+      "evidence": "All names are domain vocabulary. The AppointmentRequest from v1.0.0 is gone — no borderline 'Request' term."
+    },
+    {
+      "text": "Types that have no internal structure required by the model are declared as `interface{ Undefined }`, not as structs with speculative fields",
+      "passed": true,
+      "evidence": "All 5 types are interface{ Undefined }."
+    },
+    {
+      "text": "No struct field is typed `*sql.DB`, `http.Client`, or any other infrastructure type",
+      "passed": true,
+      "evidence": "No struct fields at all."
+    },
+    {
+      "text": "All leaf functions return `ErrUnimplemented`, not nil, not a zero value, and not panic",
+      "passed": true,
+      "evidence": "All 5 leaf functions return nil, ErrUnimplemented."
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "failed": 2,
+    "total": 14,
+    "pass_rate": 0.857
+  },
+  "vs_iteration_1": {
+    "iteration_1_pass_rate": 0.786,
+    "delta": "+0.071",
+    "improvement_source": "AppointmentRequest ('Request' term) is gone — expectation 11 now passes. Pet/Patient still absent.",
+    "regression": "none"
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "A type named Patient or Pet appears in the output",
+        "reason": "This is a genuine failure across all three iterations including the overfitted v1.1.0 run with the clean skill. The vet clinic prompt says 'a pet owner books an appointment' — the animal is implied but not named. The skill's implied-entity guidance ('surface it as a question') didn't trigger. Consider whether the prompt itself should name the animal, or whether the skill needs stronger prompting for implied subjects."
+      }
+    ],
+    "overall": "12/14. Genuine improvement over v1.0.0 on the 'Request' term. The missing Pet/Patient is a persistent skill gap: the implied-entity rule in step 1 did not cause the model to ask about the animal. The prompt may need to name the animal explicitly to make this a fair test of subject extraction rather than domain inference."
+  }
+}
