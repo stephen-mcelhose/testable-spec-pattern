@@ -24,6 +24,8 @@ This page is a how-to. The RFC 2119 MUSTS below are the seed for a future behavi
 
 ## Layers
 
+This layering follows [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) (Robert C. Martin): dependencies point inward only. The transport ring (`PetServer`) depends on the application ring (`PetService`), which depends on the domain (`pet.Pet`, `Store`). Nothing in an inner ring imports from an outer ring. `proto`/`gRPC` types are outer-ring concerns — they stay at the transport boundary.
+
 ```
 PetServer (PetServiceServer)     ← generated server interface lives here
   validateShape / protovalidate
@@ -125,6 +127,32 @@ These are the defaults this example teaches. Thin “proto all the way down” i
 **Why:** shape checks, proto mapping, and (later) `KnownError` → `google.rpc.Status` are transport concerns. Application rules and persistence stay free of gRPC.
 
 **Still deferred (wiring, not layering):** listener / `RegisterPetServiceServer`; real status-code mapping.
+
+### Alternative: collapsed transport + service (non-preferred)
+
+A common shortcut embeds `UnimplementedPetServiceServer` directly on the application service, so one struct handles shape validation, business rules, and persistence calls.
+
+```go
+// collapsed: NOT the default taught here
+type PetService struct {
+    petstorev1.UnimplementedPetServiceServer
+    Store Store
+}
+
+func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequest) (*petstorev1.Pet, error) {
+    // shape + business rules + store call — all here
+}
+```
+
+**Why it appears often:** less boilerplate, faster to wire up for small services.
+
+**Risks relative to Clean Architecture:**
+- Proto/gRPC types enter the application layer, coupling business logic to the wire contract. Schema changes in the `.proto` ripple into the service struct.
+- `protovalidate` and mapping code sit alongside business rules, making each method a mixed concern. Unit-testing business rules requires constructing proto messages.
+- There is no stable domain interface for the service — consumers (tests, future transports) must speak proto.
+- Adding a second transport (HTTP/JSON gateway, CLI) forces extraction of the layer you skipped.
+
+Use this shape only when the service is genuinely a thin adapter with no business rules and you are certain a second transport will never appear.
 
 Future skills: parent `wire-external-interface` (shape → rules → port → leaf); child `wire-grpc-service` (generated `*Server` adapter, protovalidate, domain map, status map).
 
