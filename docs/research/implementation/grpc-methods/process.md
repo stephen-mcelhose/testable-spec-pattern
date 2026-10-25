@@ -1,7 +1,7 @@
 ---
 type: how-to
 title: "gRPC method implementation process"
-description: Layered fill-out for each generated RPC — transport protovalidate + map, application business rules, domain Store — distilled from wiring PetService.
+description: Layered fill-out for each generated RPC — transport protovalidate + map, application use-case logic, domain Store — distilled from wiring PetService.
 tags: [grpc, proto, implementation, petstore, aip, protovalidate, clean-architecture]
 timestamp: 2026-10-25T19:05:48Z
 ---
@@ -13,7 +13,7 @@ timestamp: 2026-10-25T19:05:48Z
 Generated request/response types are the **external contract**, not the application model. Filling out each RPC is a layered pipeline:
 
 1. **Transport** — `protovalidate.Validate` shape; map proto ↔ domain
-2. **Application** — `validate*BusinessRules`; call Store
+2. **Application** — use cases / business rules; call Store
 3. **Leaf** — persistence speaking **domain** types
 
 Do not invent parallel DTOs for the wire. Do not leak generated types into Store or domain packages.
@@ -48,7 +48,7 @@ Encode shape in the `.proto` with `buf.validate`. At the top of every **adapter*
 - Shape violations **MUST** map to `InvalidArgument` (project typed stand-in OK).
 - The application service **MUST NOT** be called on shape failure.
 
-### 2. Business rules — application
+### 2. Use cases / business rules — application
 
 Encapsulate in `validate<Method>BusinessRules(...)` on domain/primitive args. A no-op that returns success is the easy default when there are no extra rules.
 
@@ -84,7 +84,7 @@ func validateShape[T proto.Message](msg T) error {
 	return nil
 }
 
-// service — owns business rules + Store (domain pet.Pet)
+// service — owns use-case logic + Store (domain pet.Pet)
 func (s *PetService) CreatePet(ctx context.Context, petID, displayName string) (pet.Pet, error) {
 	name, display, err := validateCreatePetBusinessRules(petID, displayName)
 	if err != nil {
@@ -163,7 +163,7 @@ Future skills: parent `wire-external-interface` (shape → rules → port → le
 3. Commit generated `*.pb.go` / `*_grpc.pb.go`.
 4. Adapter embeds `UnimplementedPetServiceServer` and satisfies `PetServiceServer`.
 5. `Store` speaks domain resource types (`pet.Pet`).
-6. Split tests by layer: `transport/grpc` owns shape + mapping to `PetAPI`; `service` owns business rules + Store. Do not assert business-rule failures in transport tests.
+6. Split tests by layer: `transport/grpc` owns shape + mapping to `PetAPI`; `service` owns use-case logic + Store. Do not assert use-case failures in transport tests.
 
 ## Non-goals (this process)
 
