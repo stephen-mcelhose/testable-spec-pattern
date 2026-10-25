@@ -1,4 +1,4 @@
-package service_test
+package grpc_test
 
 import (
 	"context"
@@ -11,14 +11,12 @@ import (
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
+	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
-// TestPetService_CreatePet covers CreatePet against AIP-133 behaviours we claim:
-// user-specified pet_id; ignore Pet.Name on the body; return the stored Pet;
-// ALREADY_EXISTS on duplicate id. Out of scope: parent, LRO, PERMISSION_DENIED,
-// system-generated ids when pet_id omitted.
-// Order: proto validation → business rules → create (ignore body name) → AlreadyExists → Internal.
-func TestPetService_CreatePet(t *testing.T) {
+// TestPetServer_CreatePet covers CreatePet against AIP-133 behaviours we claim.
+// Order: protovalidate shape → business rules → create → AlreadyExists → Internal.
+func TestPetServer_CreatePet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -30,18 +28,25 @@ func TestPetService_CreatePet(t *testing.T) {
 
 		want           *petstorev1.Pet
 		wantCode       string
-		wantCreateArgs []*petstorev1.Pet
+		wantCreateArgs []pet.Pet
 	}
 
 	testCases := []testCase{
 		{
 			name: "MUST return InvalidArgument when CreatePetRequest fails shape validation",
 			examples: []*petstorev1.CreatePetRequest{
+				{PetId: "fido", Pet: nil},
+			},
+			wantCode:       "INVALID_ARGUMENT",
+			wantCreateArgs: nil,
+		},
+		{
+			name: "MUST return InvalidArgument when CreatePetRequest fails business rules",
+			examples: []*petstorev1.CreatePetRequest{
 				{PetId: "", Pet: &petstorev1.Pet{DisplayName: "Fido"}},
 				{PetId: "Fido", Pet: &petstorev1.Pet{DisplayName: "Fido"}},
 				{PetId: "fido", Pet: &petstorev1.Pet{DisplayName: ""}},
 				{PetId: "fido", Pet: &petstorev1.Pet{DisplayName: "   "}},
-				{PetId: "fido", Pet: nil},
 			},
 			wantCode:       "INVALID_ARGUMENT",
 			wantCreateArgs: nil,
@@ -53,30 +58,28 @@ func TestPetService_CreatePet(t *testing.T) {
 				Pet:   &petstorev1.Pet{DisplayName: "  Fido  "},
 			},
 			store: stubStore{
-				createPet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
+				createPet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
 			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
-			wantCreateArgs: []*petstorev1.Pet{
+			wantCreateArgs: []pet.Pet{
 				{Name: "pets/fido", DisplayName: "Fido"},
 			},
 		},
 		{
-			// AIP-133: name on the resource body must be ignored; pet_id wins.
 			name: "MUST ignore Pet.Name on the create body and use pet_id for the resource name",
 			req: &petstorev1.CreatePetRequest{
 				PetId: "fido",
 				Pet:   &petstorev1.Pet{Name: "pets/other", DisplayName: "Fido"},
 			},
 			store: stubStore{
-				createPet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
+				createPet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
 			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
-			wantCreateArgs: []*petstorev1.Pet{
+			wantCreateArgs: []pet.Pet{
 				{Name: "pets/fido", DisplayName: "Fido"},
 			},
 		},
 		{
-			// AIP-133: duplicate user-specified id → ALREADY_EXISTS.
 			name: "MUST return AlreadyExists when the pet already exists",
 			req: &petstorev1.CreatePetRequest{
 				PetId: "fido",
@@ -86,7 +89,7 @@ func TestPetService_CreatePet(t *testing.T) {
 				createErr: &pet.AlreadyExistsError{Message: "pets/fido already exists"},
 			},
 			wantCode: "ALREADY_EXISTS",
-			wantCreateArgs: []*petstorev1.Pet{
+			wantCreateArgs: []pet.Pet{
 				{Name: "pets/fido", DisplayName: "Fido"},
 			},
 		},
@@ -100,7 +103,7 @@ func TestPetService_CreatePet(t *testing.T) {
 				createErr: errors.New("connection refused"),
 			},
 			wantCode: "INTERNAL",
-			wantCreateArgs: []*petstorev1.Pet{
+			wantCreateArgs: []pet.Pet{
 				{Name: "pets/fido", DisplayName: "Fido"},
 			},
 		},
@@ -125,7 +128,7 @@ func TestPetService_CreatePet(t *testing.T) {
 				t.Run(label, func(t *testing.T) {
 					t.Parallel()
 					store := tc.store
-					srv := service.PetService{Store: &store}
+					srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
 
 					got, err := srv.CreatePet(context.Background(), req)
 

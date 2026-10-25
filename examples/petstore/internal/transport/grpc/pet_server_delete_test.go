@@ -1,4 +1,4 @@
-package service_test
+package grpc_test
 
 import (
 	"context"
@@ -11,14 +11,10 @@ import (
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
+	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
-// TestPetService_DeletePet covers DeletePet against AIP-135 behaviours we claim:
-// succeed only when the resource existed and was deleted; NOT_FOUND when absent;
-// optional etag → ABORTED on mismatch (AIP-154 / AIP-135 protected delete).
-// Out of scope here: allow_missing, cascading force, soft delete, PERMISSION_DENIED.
-// Order: proto validation → business rules → delete (etag optional) → NotFound → Aborted → Internal.
-func TestPetService_DeletePet(t *testing.T) {
+func TestPetServer_DeletePet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -33,7 +29,7 @@ func TestPetService_DeletePet(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "MUST return InvalidArgument when the pet name fails shape validation",
+			name: "MUST return InvalidArgument when the pet name fails business rules",
 			req: &petstorev1.DeletePetRequest{
 				Name: "fido",
 				Etag: "v1",
@@ -61,8 +57,6 @@ func TestPetService_DeletePet(t *testing.T) {
 			},
 		},
 		{
-			// AIP-135: Delete succeeds iff the resource was present and deleted;
-			// if it did not exist → NOT_FOUND (unless allow_missing, which we omit).
 			name: "MUST return NotFound when the pet does not exist",
 			req: &petstorev1.DeletePetRequest{
 				Name: "pets/missing",
@@ -77,7 +71,6 @@ func TestPetService_DeletePet(t *testing.T) {
 			},
 		},
 		{
-			// AIP-135 protected delete / AIP-154: provided etag that does not match → ABORTED.
 			name: "MUST return Aborted when a provided etag does not match",
 			req: &petstorev1.DeletePetRequest{
 				Name: "pets/fido",
@@ -111,7 +104,7 @@ func TestPetService_DeletePet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			store := tc.store
-			srv := service.PetService{Store: &store}
+			srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
 
 			_, err := srv.DeletePet(context.Background(), tc.req)
 

@@ -1,4 +1,4 @@
-package service_test
+package grpc_test
 
 import (
 	"context"
@@ -11,11 +11,10 @@ import (
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
+	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
-// TestPetService_GetPet covers GetPet.
-// Order: proto validation → business rules → return stored Pet → NotFound → Internal.
-func TestPetService_GetPet(t *testing.T) {
+func TestPetServer_GetPet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -32,7 +31,7 @@ func TestPetService_GetPet(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "MUST return InvalidArgument when the pet name fails shape validation",
+			name: "MUST return InvalidArgument when the pet name fails business rules",
 			examples: []*petstorev1.GetPetRequest{
 				{Name: "fido"},
 				{Name: "pets/"},
@@ -45,7 +44,7 @@ func TestPetService_GetPet(t *testing.T) {
 			name: "MUST return the stored Pet for a valid pet name",
 			req:  &petstorev1.GetPetRequest{Name: "  pets/fido  "},
 			store: stubStore{
-				getPet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
+				getPet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
 			want:        &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			wantGetArgs: []string{"pets/fido"},
@@ -85,7 +84,7 @@ func TestPetService_GetPet(t *testing.T) {
 				t.Run(label, func(t *testing.T) {
 					t.Parallel()
 					store := tc.store
-					srv := service.PetService{Store: &store}
+					srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
 
 					got, err := srv.GetPet(context.Background(), req)
 

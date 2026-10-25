@@ -1,4 +1,4 @@
-package service_test
+package grpc_test
 
 import (
 	"context"
@@ -11,14 +11,10 @@ import (
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
+	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
-// TestPetService_UpdatePet covers UpdatePet against AIP-134 behaviours we claim:
-// Pet.Name identifies the resource; return the stored Pet; NOT_FOUND if absent;
-// optional Pet.Etag → ABORTED on mismatch (AIP-154). Out of scope: update_mask,
-// allow_missing upsert, LRO, PERMISSION_DENIED, PUT full-replace semantics.
-// Order: proto validation → business rules → update (etag optional) → NotFound → Aborted → Internal.
-func TestPetService_UpdatePet(t *testing.T) {
+func TestPetServer_UpdatePet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -38,7 +34,13 @@ func TestPetService_UpdatePet(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "MUST return InvalidArgument when UpdatePetRequest fails shape validation",
+			name:           "MUST return InvalidArgument when UpdatePetRequest fails shape validation",
+			req:            &petstorev1.UpdatePetRequest{Pet: nil},
+			wantCode:       "INVALID_ARGUMENT",
+			wantUpdateArgs: nil,
+		},
+		{
+			name: "MUST return InvalidArgument when UpdatePetRequest fails business rules",
 			req: &petstorev1.UpdatePetRequest{
 				Pet: &petstorev1.Pet{Name: "fido", DisplayName: "Fido"},
 			},
@@ -49,11 +51,11 @@ func TestPetService_UpdatePet(t *testing.T) {
 			name: "MUST update the pet and return the stored Pet",
 			req:  validReq,
 			store: stubStore{
-				updatePet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			},
 			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			wantUpdateArgs: []updateCall{
-				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
@@ -62,15 +64,14 @@ func TestPetService_UpdatePet(t *testing.T) {
 				Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"},
 			},
 			store: stubStore{
-				updatePet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
+				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			},
 			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			wantUpdateArgs: []updateCall{
-				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: ""},
+				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: ""},
 			},
 		},
 		{
-			// AIP-134: missing resource → NOT_FOUND (unless allow_missing, which we omit).
 			name: "MUST return NotFound when the pet does not exist",
 			req:  validReq,
 			store: stubStore{
@@ -78,11 +79,10 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "NOT_FOUND",
 			wantUpdateArgs: []updateCall{
-				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
-			// AIP-134 / AIP-154: provided etag that does not match → ABORTED.
 			name: "MUST return Aborted when a provided etag does not match",
 			req:  validReq,
 			store: stubStore{
@@ -90,7 +90,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "ABORTED",
 			wantUpdateArgs: []updateCall{
-				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 		{
@@ -101,7 +101,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 			},
 			wantCode: "INTERNAL",
 			wantUpdateArgs: []updateCall{
-				{pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
 			},
 		},
 	}
@@ -110,7 +110,7 @@ func TestPetService_UpdatePet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			store := tc.store
-			srv := service.PetService{Store: &store}
+			srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
 
 			got, err := srv.UpdatePet(context.Background(), tc.req)
 

@@ -22,3 +22,4 @@
 ## [2026-10-25] ingest | docs/research/implementation/grpc-methods/process.md — gRPC method implementation process (proto → business rules → storage)
 ## [2026-10-25] edit | docs/research/implementation/grpc-methods/process.md — step 1 is protovalidate.Validate over buf.validate constraints
 ## [2026-10-25] edit | docs/research/implementation/grpc-methods/process.md — RFC2119 MUSTS, validate*BusinessRules, Boundary choice (PR #38 review)
+## [2026-10-25] edit | docs/research/implementation/grpc-methods/process.md — layered default: transport adapter + domain Store (template)
