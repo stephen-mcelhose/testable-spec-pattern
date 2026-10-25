@@ -2,22 +2,12 @@ package modeling
 
 import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/types"
 
-// GatherRequirements takes an idea and produces structured requirements by
-// composing use-case writing, domain sketching, and Gherkin scenario derivation.
+// GatherRequirements takes an idea and produces requirements.
+// The composition of views (use cases, domain sketches, Gherkin scenarios)
+// is determined by the strategy, not fixed here.
+// Leaf: backed by requirements-gathering skills.
 func GatherRequirements(idea types.Idea) (types.Requirements, error) {
-	useCases, err := WriteUseCases(idea)
-	if err != nil {
-		return types.Requirements{}, err
-	}
-	sketch, err := SketchDomainTypes(idea, useCases)
-	if err != nil {
-		return types.Requirements{}, err
-	}
-	scenarios, err := WriteGherkinScenarios(useCases, sketch)
-	if err != nil {
-		return types.Requirements{}, err
-	}
-	return types.Requirements{UseCases: useCases, Sketch: sketch, Scenarios: scenarios}, nil
+	return nil, types.ErrUnimplemented
 }
 
 // WriteUseCases interrogates an idea and produces a set of use cases —

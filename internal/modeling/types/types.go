@@ -21,12 +21,11 @@ type CompletedProject struct {
 	Project      BuiltProject
 }
 
-// Requirements is the structured output of the requirements-gathering phase.
-type Requirements struct {
-	UseCases  []UseCase
-	Sketch    DomainSketch
-	Scenarios []GherkinScenario
-}
+// Requirements is the output of the requirements-gathering phase.
+// Its internal structure depends on the strategy used — use cases,
+// domain sketches, and Gherkin scenarios are views of requirements,
+// not a fixed composition.
+type Requirements interface{ Undefined }
 
 // UseCase describes a single actor–goal interaction with the system.
 type UseCase interface{ Undefined }
