@@ -11,6 +11,7 @@ import (
 
 // PetAPI is the application port the transport adapter calls.
 // Defined here (usage site). *service.PetService satisfies it.
+// Application behaviour: ../../service/docs/specification.md
 type PetAPI interface {
 	CreatePet(ctx context.Context, petID, displayName string) (pet.Pet, error)
 	GetPet(ctx context.Context, name string) (pet.Pet, error)
@@ -20,8 +21,8 @@ type PetAPI interface {
 }
 
 // PetServer is the gRPC transport adapter.
-// Owns: (1) protovalidate shape, (2) proto ↔ domain field mapping, (3) forward to PetAPI.
-// KnownError → google.rpc.Status mapping waits on server wiring / middleware.
+// Behavioural contract: specification.md
+// Optional transforms: middleware.md
 type PetServer struct {
 	petstorev1.UnimplementedPetServiceServer
 	Pets PetAPI

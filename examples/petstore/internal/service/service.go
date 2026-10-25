@@ -26,8 +26,9 @@ type Store interface {
 }
 
 // PetService is the application service: business rules → Store.
+// Behavioural contract: docs/specification.md
 // It has no dependency on generated gRPC/proto types. The transport adapter
-// (internal/transport/grpc) owns protovalidate shape checks and proto mapping.
+// (internal/transport/grpc) owns request shape checks and proto mapping.
 type PetService struct {
 	Store Store
 }
