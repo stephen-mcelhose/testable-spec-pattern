@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
+	"buf.build/go/protovalidate"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
@@ -29,7 +32,7 @@ type Store interface {
 }
 
 // PetService is a thin AIP-flavoured Pets API over generated petstorev1 types:
-// (1) proto/shape validation → (2) business rules → (3) Store + error map.
+// (1) protovalidate.Validate shape → (2) business rules → (3) Store + error map.
 // Embeds UnimplementedPetServiceServer so UploadPhoto stays unimplemented
 // until a later issue; gRPC server registration is out of scope here.
 type PetService struct {
@@ -43,12 +46,9 @@ var _ petstorev1.PetServiceServer = (*PetService)(nil)
 // the body is ignored; returns the fully populated stored Pet.
 // Duplicate id → AlreadyExists.
 func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape validation — must be a valid CreatePetRequest.
-	if req == nil {
-		return nil, &pet.InvalidArgumentError{Message: "request is required"}
-	}
-	if req.GetPet() == nil {
-		return nil, &pet.InvalidArgumentError{Message: "pet is required"}
+	// 1. Proto / shape — must be a valid CreatePetRequest (buf.validate).
+	if err := validateShape(req); err != nil {
+		return nil, err
 	}
 
 	// 2. Business rules — user-specified pet_id required in this example
@@ -72,9 +72,9 @@ func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetReq
 
 // GetPet validates the resource name and returns the stored Pet.
 func (s *PetService) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape validation — must be a valid GetPetRequest.
-	if req == nil {
-		return nil, &pet.InvalidArgumentError{Message: "request is required"}
+	// 1. Proto / shape — must be a valid GetPetRequest (buf.validate).
+	if err := validateShape(req); err != nil {
+		return nil, err
 	}
 
 	// 2. Business rules — name must be a canonical pets/{pet} id.
@@ -95,12 +95,9 @@ func (s *PetService) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) 
 // optional freshness (AIP-154) — when set and mismatched, Store returns Aborted.
 // Returns the fully populated stored Pet. update_mask / allow_missing are out of scope.
 func (s *PetService) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape validation — must be a valid UpdatePetRequest.
-	if req == nil {
-		return nil, &pet.InvalidArgumentError{Message: "request is required"}
-	}
-	if req.GetPet() == nil {
-		return nil, &pet.InvalidArgumentError{Message: "pet is required"}
+	// 1. Proto / shape — must be a valid UpdatePetRequest (buf.validate).
+	if err := validateShape(req); err != nil {
+		return nil, err
 	}
 
 	// 2. Business rules — name shape; display_name required; etag optional.
@@ -125,9 +122,9 @@ func (s *PetService) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetReq
 // DeletePet deletes the pet (AIP-135). Etag is optional protected-delete freshness
 // (AIP-154): when provided and mismatched, Store returns Aborted.
 func (s *PetService) DeletePet(ctx context.Context, req *petstorev1.DeletePetRequest) (*emptypb.Empty, error) {
-	// 1. Proto / shape validation — must be a valid DeletePetRequest.
-	if req == nil {
-		return nil, &pet.InvalidArgumentError{Message: "request is required"}
+	// 1. Proto / shape — must be a valid DeletePetRequest (buf.validate).
+	if err := validateShape(req); err != nil {
+		return nil, err
 	}
 
 	// 2. Business rules — name shape; etag optional.
@@ -146,16 +143,13 @@ func (s *PetService) DeletePet(ctx context.Context, req *petstorev1.DeletePetReq
 // ListPets lists pets (AIP-132 / AIP-158): default and coerce page_size; return a
 // page. Empty collection is success. filter / order_by / show_deleted are out of scope.
 func (s *PetService) ListPets(ctx context.Context, req *petstorev1.ListPetsRequest) (*petstorev1.ListPetsResponse, error) {
-	// 1. Proto / shape validation — must be a valid ListPetsRequest.
-	if req == nil {
-		return nil, &pet.InvalidArgumentError{Message: "request is required"}
+	// 1. Proto / shape — must be a valid ListPetsRequest (buf.validate; page_size >= 0).
+	if err := validateShape(req); err != nil {
+		return nil, err
 	}
 
-	// 2. Business rules — page_size bounds (default + coerce above max).
+	// 2. Business rules — page_size default + coerce above max (AIP-132).
 	pageSize := req.GetPageSize()
-	if pageSize < 0 {
-		return nil, &pet.InvalidArgumentError{Message: "page_size must not be negative"}
-	}
 	if pageSize == 0 {
 		pageSize = defaultPageSize
 	}
@@ -172,6 +166,29 @@ func (s *PetService) ListPets(ctx context.Context, req *petstorev1.ListPetsReque
 		pets = []*petstorev1.Pet{}
 	}
 	return &petstorev1.ListPetsResponse{Pets: pets, NextPageToken: next}, nil
+}
+
+// validateShape runs step 1: nil guard (incl. typed-nil proto.Message), then
+// protovalidate.Validate against buf.validate constraints on the request.
+func validateShape(msg proto.Message) error {
+	if msg == nil || isNilProto(msg) {
+		return &pet.InvalidArgumentError{Message: "request is required"}
+	}
+	if err := protovalidate.Validate(msg); err != nil {
+		return &pet.InvalidArgumentError{Message: err.Error()}
+	}
+	return nil
+}
+
+// isNilProto reports typed-nil pointers boxed as proto.Message (iface != nil, value nil).
+func isNilProto(msg proto.Message) bool {
+	v := reflect.ValueOf(msg)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
 
 // petNameFromID builds pets/{pet_id} and validates via NormalizePetName (AIP-133).

@@ -7,6 +7,7 @@
 package petstorev1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -86,6 +87,7 @@ type ListPetsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Maximum number of pets to return. The service may return fewer.
 	// If unspecified, at most 50 pets are returned. Maximum is 100.
+	// Negative values fail shape validation; values above 100 are coerced in the service (AIP-132).
 	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// A page token from a previous ListPets call. Empty string for the first page.
 	PageToken string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -729,34 +731,36 @@ var File_petstore_v1_pet_service_proto protoreflect.FileDescriptor
 
 const file_petstore_v1_pet_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1dpetstore/v1/pet_service.proto\x12\vpetstore.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\"w\n" +
-	"\x0fListPetsRequest\x12!\n" +
-	"\tpage_size\x18\x01 \x01(\x05B\x04\xe2A\x01\x01R\bpageSize\x12#\n" +
+	"\x1dpetstore/v1/pet_service.proto\x12\vpetstore.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1bbuf/validate/validate.proto\"~\n" +
+	"\x0fListPetsRequest\x12(\n" +
+	"\tpage_size\x18\x01 \x01(\x05B\v\xe2A\x01\x01\xbaH\x04\x1a\x02(\x00R\bpageSize\x12#\n" +
 	"\n" +
 	"page_token\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\tpageToken\x12\x1c\n" +
 	"\x06filter\x18\x03 \x01(\tB\x04\xe2A\x01\x01R\x06filter\"f\n" +
 	"\x10ListPetsResponse\x12$\n" +
 	"\x04pets\x18\x01 \x03(\v2\x10.petstore.v1.PetR\x04pets\x12,\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tB\x04\xe2A\x01\x03R\rnextPageToken\"F\n" +
-	"\rGetPetRequest\x125\n" +
-	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
-	"\x18petstore.example.com/PetR\x04name\"Y\n" +
-	"\x10CreatePetRequest\x12(\n" +
-	"\x03pet\x18\x01 \x01(\v2\x10.petstore.v1.PetB\x04\xe2A\x01\x02R\x03pet\x12\x1b\n" +
-	"\x06pet_id\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x05petId\"\x7f\n" +
-	"\x10UpdatePetRequest\x12(\n" +
-	"\x03pet\x18\x01 \x01(\v2\x10.petstore.v1.PetB\x04\xe2A\x01\x02R\x03pet\x12A\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tB\x04\xe2A\x01\x03R\rnextPageToken\"P\n" +
+	"\rGetPetRequest\x12?\n" +
+	"\x04name\x18\x01 \x01(\tB+\xe2A\x01\x02\xfaA\x1a\n" +
+	"\x18petstore.example.com/Pet\xbaH\a\xc8\x01\x01r\x02\x10\x01R\x04name\"_\n" +
+	"\x10CreatePetRequest\x12.\n" +
+	"\x03pet\x18\x01 \x01(\v2\x10.petstore.v1.PetB\n" +
+	"\xe2A\x01\x02\xbaH\x03\xc8\x01\x01R\x03pet\x12\x1b\n" +
+	"\x06pet_id\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x05petId\"\x85\x01\n" +
+	"\x10UpdatePetRequest\x12.\n" +
+	"\x03pet\x18\x01 \x01(\v2\x10.petstore.v1.PetB\n" +
+	"\xe2A\x01\x02\xbaH\x03\xc8\x01\x01R\x03pet\x12A\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x04\xe2A\x01\x01R\n" +
-	"updateMask\"c\n" +
-	"\x10DeletePetRequest\x125\n" +
-	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
-	"\x18petstore.example.com/PetR\x04name\x12\x18\n" +
-	"\x04etag\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x04etag\"\xa7\x01\n" +
-	"\x12UploadPhotoRequest\x125\n" +
-	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
-	"\x18petstore.example.com/PetR\x04name\x12#\n" +
+	"updateMask\"m\n" +
+	"\x10DeletePetRequest\x12?\n" +
+	"\x04name\x18\x01 \x01(\tB+\xe2A\x01\x02\xfaA\x1a\n" +
+	"\x18petstore.example.com/Pet\xbaH\a\xc8\x01\x01r\x02\x10\x01R\x04name\x12\x18\n" +
+	"\x04etag\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x04etag\"\xbb\x01\n" +
+	"\x12UploadPhotoRequest\x12?\n" +
+	"\x04name\x18\x01 \x01(\tB+\xe2A\x01\x02\xfaA\x1a\n" +
+	"\x18petstore.example.com/Pet\xbaH\a\xc8\x01\x01r\x02\x10\x01R\x04name\x12-\n" +
 	"\n" +
-	"photo_data\x18\x02 \x01(\fB\x04\xe2A\x01\x02R\tphotoData\x125\n" +
+	"photo_data\x18\x02 \x01(\fB\x0e\xe2A\x01\x02\xbaH\a\xc8\x01\x01z\x02\x10\x01R\tphotoData\x125\n" +
 	"\x13additional_metadata\x18\x03 \x01(\tB\x04\xe2A\x01\x01R\x12additionalMetadata\"?\n" +
 	"\x13UploadPhotoResponse\x12(\n" +
 	"\x03pet\x18\x01 \x01(\v2\x10.petstore.v1.PetB\x04\xe2A\x01\x03R\x03pet\"\x9c\x03\n" +

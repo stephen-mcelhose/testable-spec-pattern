@@ -10,6 +10,7 @@ import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
+import "buf/validate/validate.proto";
 
 // PetService manages pets in the petstore.
 service PetService {
@@ -63,7 +64,11 @@ service PetService {
 message ListPetsRequest {
   // Maximum number of pets to return. The service may return fewer.
   // If unspecified, at most 50 pets are returned. Maximum is 100.
-  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+  // Negative values fail shape validation; values above 100 are coerced in the service (AIP-132).
+  int32 page_size = 1 [
+    (google.api.field_behavior) = OPTIONAL,
+    (buf.validate.field).int32.gte = 0
+  ];
 
   // A page token from a previous ListPets call. Empty string for the first page.
   string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
@@ -88,14 +93,19 @@ message GetPetRequest {
   // Format: pets/{pet}
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"},
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
   ];
 }
 
 // CreatePetRequest is the request for CreatePet.
 message CreatePetRequest {
   // The pet to create.
-  Pet pet = 1 [(google.api.field_behavior) = REQUIRED];
+  Pet pet = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).required = true
+  ];
 
   // The ID to use for the pet, becoming the final segment of the pet's name.
   // If omitted, a system-generated ID is used.
@@ -105,7 +115,10 @@ message CreatePetRequest {
 // UpdatePetRequest is the request for UpdatePet.
 message UpdatePetRequest {
   // The pet to update. The pet's `name` field identifies which pet to update.
-  Pet pet = 1 [(google.api.field_behavior) = REQUIRED];
+  Pet pet = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).required = true
+  ];
 
   // The list of fields to update. If omitted, all populated fields are updated.
   google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
@@ -117,7 +130,9 @@ message DeletePetRequest {
   // Format: pets/{pet}
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"},
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
   ];
 
   // Optional freshness token (AIP-154 / AIP-135 protected delete).
@@ -131,11 +146,17 @@ message UploadPhotoRequest {
   // Format: pets/{pet}
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "petstore.example.com/Pet"}
+    (google.api.resource_reference) = {type: "petstore.example.com/Pet"},
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
   ];
 
   // The raw photo bytes to upload.
-  bytes photo_data = 2 [(google.api.field_behavior) = REQUIRED];
+  bytes photo_data = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).required = true,
+    (buf.validate.field).bytes.min_len = 1
+  ];
 
   // Optional metadata describing the photo.
   string additional_metadata = 3 [(google.api.field_behavior) = OPTIONAL];

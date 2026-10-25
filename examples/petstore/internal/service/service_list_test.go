@@ -17,7 +17,7 @@ import (
 // page_size default + coerce-above-max; INVALID_ARGUMENT for negative page_size;
 // return page (incl. empty — not NotFound) with next_page_token. Out of scope: parent,
 // filter, order_by, show_deleted, total_size, PERMISSION_DENIED.
-// Order: proto validation → business rules (default/coerce page_size) → page (+ empty) → Internal.
+// Order: protovalidate shape (page_size >= 0) → business rules (default/coerce) → page (+ empty) → Internal.
 func TestPetService_ListPets(t *testing.T) {
 	t.Parallel()
 
