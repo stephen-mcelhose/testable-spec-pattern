@@ -8,18 +8,17 @@ timestamp: 2026-10-25T21:24:53Z
 
 # Runnable Specifications
 
-A runnable specification is the executable form of a [Specification](../specifications/index.md) — Go tests named as RFC 2119 requirements. A passing run means the implementation satisfies its contracts.
+A runnable specification is the executable form of a [Specification](../specifications/index.md) — Go tests named as RFC 2119 requirements. A passing run means the [Implementation](../implementation/index.md) satisfies its [Contracts](../contracts-and-domain-modeling/contracts.md).
 
 ## Use Cases
 
-- Create Runnable Specifications from [Specifications](../specifications/index.md)
-- Create Runnable Specifications from [Implementations](../implementation/index.md) — deriving the spec retroactively from working code
+### Create a Runnable Specification from a Specification
 
-## What Makes a Specification "Runnable"
+As a software engineer, I want to [Create a Runnable Specification](../runnable-specifications/index.md) from a [Specification](../specifications/index.md) in order to verify that [Implementation](../implementation/index.md) satisfies its behavioral contracts.
 
-- Test functions named as RFC 2119 requirements (e.g. `Test_It_MUST_...`)
-- Grounded in domain names established during requirements and modeling
-- A passing run is the definition of a verified project
+### Create a Runnable Specification from an Implementation
+
+As a software engineer, I want to [Create a Runnable Specification](../runnable-specifications/index.md) from an [Implementation](../implementation/index.md) in order to retroactively document and lock the behavior of existing code.
 
 > [!NOTE]
-> The `go-behavioral-spec` skill is the primary tool for producing runnable specifications in this workflow.
+> The `go-behavioral-spec` skill is the primary tool for producing runnable specifications in this workflow. A passing runnable specification is the definition of a verified project.

@@ -8,17 +8,10 @@ timestamp: 2026-10-25T21:24:53Z
 
 # Requirements
 
-Requirements are the structured output of the [requirements gathering phase](./index.md). They are produced from a raw Idea and consumed by every downstream phase.
+> [!WARNING]
+> Not an exhaustie list, should be added too.
+> QUESTION: What do I (as a software engineer) need to gather requirements?
 
-## What Requirements Are
-
-Requirements capture *what* needs to be built and *for whom* — not how. They are:
-
-- **Use cases** — actor–goal interactions with the system
-- **Domain sketches** — named entities and their relations
-- **Gherkin scenarios** — Given/When/Then behaviours grounded in domain names
-
-These are views of requirements, not a fixed composition. The strategy determines which views are produced.
 
 ## Inputs
 
@@ -31,3 +24,11 @@ These are views of requirements, not a fixed composition. The strategy determine
   - [Specifications](../specifications/index.md)
   - [Design](../design/index.md)
   - [Implementation](../implementation/index.md)
+
+
+## Other Requirements
+
+- [Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- [Business Requirements Document (BRD)](https://en.wikipedia.org/wiki/Business_requirements_document)
+- [Functional Requirements Document (FRD)](https://en.wikipedia.org/wiki/Functional_requirements_document)
+- [User Stories](https://en.wikipedia.org/wiki/User_story)]

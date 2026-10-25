@@ -12,14 +12,22 @@ The implementation phase produces a working Go project — scaffolded, wired, an
 
 ## Use Cases
 
-- Implement a new feature from [Requirements](../requirements-gathering/requirements.md)
-- Implement a new feature from [Requirements](../requirements-gathering/requirements.md) and [Contracts](../contracts-and-domain-modeling/contracts.md)
-- Implement a new feature from [Requirements](../requirements-gathering/requirements.md), [Contracts](../contracts-and-domain-modeling/contracts.md), and [Specifications](../specifications/index.md)
-- Implement a new feature from [Contracts](../contracts-and-domain-modeling/contracts.md) and [Specifications](../specifications/index.md)
+### Implement from Contracts and Specifications
 
-## What Implementation Produces
+As a software engineer, I want to [Implement](../implementation/index.md) a new feature from [Contracts](../contracts-and-domain-modeling/contracts.md) and [Specifications](../specifications/index.md) in order to produce a working project that can be verified through [Testing](../testing/index.md).
 
-- A scaffolded Go project (`go-project-scaffold`)
-- Generated code from contracts (proto codegen)
-- Wired service implementations
-- A built project that carries a [Runnable Specification](../runnable-specifications/index.md)
+### Implement from Requirements, Contracts, and Specifications
+
+As a software engineer, I want to [Implement](../implementation/index.md) a new feature from [Requirements](../requirements-gathering/requirements.md), [Contracts](../contracts-and-domain-modeling/contracts.md), and [Specifications](../specifications/index.md) in order to produce a working project that can be verified through [Testing](../testing/index.md).
+
+### Scaffold a Go Project from Requirements
+
+As a software engineer, I want to [Scaffold a Go Project](../implementation/index.md) from [Requirements](../requirements-gathering/requirements.md) in order to establish an idiomatic project structure before wiring services.
+
+### Generate Code from Contracts
+
+As a software engineer, I want to [Generate Code](../implementation/index.md) from [Contracts](../contracts-and-domain-modeling/contracts.md) in order to produce Go types and service stubs for [Implementation](../implementation/index.md).
+
+### Wire Services
+
+As a software engineer, I want to [Wire Services](../implementation/index.md) from a scaffolded project and generated code in order to produce a running implementation that can be verified through [Testing](../testing/index.md).

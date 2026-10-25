@@ -10,13 +10,14 @@ timestamp: 2026-10-25T21:24:53Z
 
 Specifications are prose descriptions of how a system *must* behave — distinct from [Contracts](../contracts-and-domain-modeling/contracts.md) (which define shape) and from [Runnable Specifications](../runnable-specifications/index.md) (which verify behaviour at runtime).
 
+See the [RFC 2119 Specification Template](./rfc2119.md) for the standard document format.
+
 ## Use Cases
 
-- Create Specifications from [Requirements](../requirements-gathering/requirements.md)
-- Create Specifications from [Requirements](../requirements-gathering/requirements.md) and [Contracts](../contracts-and-domain-modeling/contracts.md)
+### Write a Specification from Requirements
 
-## Outputs
+As a software engineer, I want to [Write a Specification](./rfc2119.md) from [Requirements](../requirements-gathering/requirements.md) in order to inform [Planning](../planning/index.md), [Implementation](../implementation/index.md), and [Testing](../testing/index.md) of software.
 
-- Specifications consumed by:
-  - [Implementation](../implementation/index.md) — engineers implement against the spec
-  - [Runnable Specifications](../runnable-specifications/index.md) — specs become executable tests
+### Write a Specification from Requirements and Contracts
+
+As a software engineer, I want to [Write a Specification](./rfc2119.md) from [Requirements](../requirements-gathering/requirements.md) and [Contracts](../contracts-and-domain-modeling/contracts.md) in order to produce a behavioral contract grounded in domain names that informs [Planning](../planning/index.md), [Implementation](../implementation/index.md), and [Testing](../testing/index.md).

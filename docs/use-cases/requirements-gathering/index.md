@@ -12,10 +12,19 @@ The requirements gathering phase takes a raw [Idea](./requirements.md) and produ
 
 ## Use Cases
 
-- [Gather Requirements](./requirements.md) from an Idea
-- Write Use Cases from an Idea
-- Sketch Domain Types from an Idea and Use Cases
-- Write Gherkin Scenarios from Use Cases and a Domain Sketch
+### Gather Requirements from an Idea
+
+As a software engineer, I want to [Gather Requirements](./requirements-gathering/index.md) in order to inform [Contracts & Domain Modeling](./contracts-and-domain-modeling/index.md), [Specifications](./specifications/index.md), [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
+
+### Write Use Cases from an Idea
+
+As a software engineer I want to [Write Use Cases](./use-cases.md) from an Idea in order to inform the downstream phases of software development.
+
+As a software engineer I want to [Sketch Domain Types](./domain-types.md) from an Idea and Use Cases in order to inform the downstream phases of software development.
+
+As a software engineer I want to [Write Gherkin Scenarios](./gherkin-scenarios.md) from Use Cases and a Domain Sketch in order to inform the downstream phases of software development.
+
+
 
 > [!NOTE]
 > The workflow does not have to start here. If requirements already exist from a prior session or external source, proceed directly to [Contracts & Domain Modeling](../contracts-and-domain-modeling/index.md) or [Specifications](../specifications/index.md).
