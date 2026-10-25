@@ -35,11 +35,16 @@ type PetService struct {
 // CreatePet creates a pet (AIP-133): pet_id builds the resource name; body name
 // is ignored at the adapter. Duplicate id → AlreadyExists.
 func (s *PetService) CreatePet(ctx context.Context, petID, displayName string) (pet.Pet, error) {
+	// TODO: revisit, this is really transforming from ExternalInterface to DomainInterface
+	// QUESTION: What is the use case for this? Why isn't it captured?
+	// This speaks to this possibly being a transport concern?  All of shape is really.
+	// Either way I think this is better expressed pet.New() where New can return a pet.Pet and an error.
 	name, display, err := validateCreatePetBusinessRules(petID, displayName)
 	if err != nil {
 		return pet.Pet{}, err
 	}
 
+	// Here we are using domain object pet.Pet as our transport shape.
 	created, err := s.Store.Create(ctx, pet.Pet{Name: name, DisplayName: display})
 	if err != nil {
 		return pet.Pet{}, mapStoreError(err)

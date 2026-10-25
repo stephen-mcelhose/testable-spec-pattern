@@ -10,7 +10,6 @@ import (
 
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
-	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
@@ -20,9 +19,8 @@ func TestPetServer_GetPet(t *testing.T) {
 	type testCase struct {
 		name string
 
-		req      *petstorev1.GetPetRequest
-		examples []*petstorev1.GetPetRequest
-		store    stubStore
+		req  *petstorev1.GetPetRequest
+		pets stubPets
 
 		want        *petstorev1.Pet
 		wantCode    string
@@ -31,76 +29,50 @@ func TestPetServer_GetPet(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "MUST return InvalidArgument when the pet name fails business rules",
-			examples: []*petstorev1.GetPetRequest{
-				{Name: "fido"},
-				{Name: "pets/"},
-				{Name: "pets/Fido"},
-			},
+			name:        "MUST return InvalidArgument when GetPetRequest fails shape validation",
+			req:         &petstorev1.GetPetRequest{Name: ""},
 			wantCode:    "INVALID_ARGUMENT",
 			wantGetArgs: nil,
 		},
 		{
-			name: "MUST return the stored Pet for a valid pet name",
-			req:  &petstorev1.GetPetRequest{Name: "  pets/fido  "},
-			store: stubStore{
+			name: "MUST map name to PetAPI and map the domain Pet to proto",
+			req:  &petstorev1.GetPetRequest{Name: "pets/fido"},
+			pets: stubPets{
 				getPet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
 			want:        &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			wantGetArgs: []string{"pets/fido"},
 		},
 		{
-			name: "MUST return NotFound when the pet does not exist",
+			name: "MUST forward PetAPI errors",
 			req:  &petstorev1.GetPetRequest{Name: "pets/missing"},
-			store: stubStore{
+			pets: stubPets{
 				getErr: &pet.NotFoundError{Message: "pets/missing not found"},
 			},
 			wantCode:    "NOT_FOUND",
 			wantGetArgs: []string{"pets/missing"},
-		},
-		{
-			name: "MUST return Internal when get fails for a non-not-found reason",
-			req:  &petstorev1.GetPetRequest{Name: "pets/fido"},
-			store: stubStore{
-				getErr: errors.New("connection refused"),
-			},
-			wantCode:    "INTERNAL",
-			wantGetArgs: []string{"pets/fido"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			reqs := tc.examples
-			if len(reqs) == 0 {
-				reqs = []*petstorev1.GetPetRequest{tc.req}
-			}
-			for _, req := range reqs {
-				label := "nil"
-				if req != nil {
-					label = req.Name
-				}
-				t.Run(label, func(t *testing.T) {
-					t.Parallel()
-					store := tc.store
-					srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
+			pets := tc.pets
+			srv := petgrpc.PetServer{Pets: &pets}
 
-					got, err := srv.GetPet(context.Background(), req)
+			got, err := srv.GetPet(context.Background(), tc.req)
 
-					assert.Equal(t, tc.wantGetArgs, store.getCalls, "Store.Get args")
-					if tc.wantCode != "" {
-						require.Error(t, err)
-						var known pet.KnownError
-						require.True(t, errors.As(err, &known), "error MUST be KnownError, got %T: %v", err, err)
-						assert.Equal(t, tc.wantCode, known.Code())
-						assert.Nil(t, got)
-						return
-					}
-					require.NoError(t, err)
-					assert.Equal(t, tc.want, got)
-				})
+			assert.Equal(t, tc.wantGetArgs, pets.getCalls, "PetAPI.GetPet args")
+			if tc.wantCode != "" {
+				require.Error(t, err)
+				var known pet.KnownError
+				require.True(t, errors.As(err, &known), "error MUST be KnownError, got %T: %v", err, err)
+				assert.Equal(t, tc.wantCode, known.Code())
+				assert.Nil(t, got)
+				return
 			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }

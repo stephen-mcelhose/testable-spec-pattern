@@ -6,8 +6,8 @@ import (
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 )
 
-// stubStore records Store calls so specs can assert the leaf boundary.
-type stubStore struct {
+// stubPets records PetAPI calls so transport specs assert mapping, not business rules.
+type stubPets struct {
 	createPet pet.Pet
 	createErr error
 	getPet    pet.Pet
@@ -19,16 +19,22 @@ type stubStore struct {
 	listNext  string
 	listErr   error
 
-	createCalls []pet.Pet
+	createCalls []createCall
 	getCalls    []string
 	updateCalls []updateCall
 	deleteCalls []deleteCall
 	listCalls   []listCall
 }
 
+type createCall struct {
+	petID       string
+	displayName string
+}
+
 type updateCall struct {
-	pet  pet.Pet
-	etag string
+	name        string
+	displayName string
+	etag        string
 }
 
 type deleteCall struct {
@@ -41,27 +47,27 @@ type listCall struct {
 	pageToken string
 }
 
-func (s *stubStore) Create(_ context.Context, p pet.Pet) (pet.Pet, error) {
-	s.createCalls = append(s.createCalls, p)
+func (s *stubPets) CreatePet(_ context.Context, petID, displayName string) (pet.Pet, error) {
+	s.createCalls = append(s.createCalls, createCall{petID: petID, displayName: displayName})
 	return s.createPet, s.createErr
 }
 
-func (s *stubStore) Get(_ context.Context, name string) (pet.Pet, error) {
+func (s *stubPets) GetPet(_ context.Context, name string) (pet.Pet, error) {
 	s.getCalls = append(s.getCalls, name)
 	return s.getPet, s.getErr
 }
 
-func (s *stubStore) Update(_ context.Context, p pet.Pet, etag string) (pet.Pet, error) {
-	s.updateCalls = append(s.updateCalls, updateCall{pet: p, etag: etag})
+func (s *stubPets) UpdatePet(_ context.Context, name, displayName, etag string) (pet.Pet, error) {
+	s.updateCalls = append(s.updateCalls, updateCall{name: name, displayName: displayName, etag: etag})
 	return s.updatePet, s.updateErr
 }
 
-func (s *stubStore) Delete(_ context.Context, name, etag string) error {
+func (s *stubPets) DeletePet(_ context.Context, name, etag string) error {
 	s.deleteCalls = append(s.deleteCalls, deleteCall{name: name, etag: etag})
 	return s.deleteErr
 }
 
-func (s *stubStore) List(_ context.Context, pageSize int32, pageToken string) ([]pet.Pet, string, error) {
+func (s *stubPets) ListPets(_ context.Context, pageSize int32, pageToken string) ([]pet.Pet, string, error) {
 	s.listCalls = append(s.listCalls, listCall{pageSize: pageSize, pageToken: pageToken})
 	return s.listPets, s.listNext, s.listErr
 }

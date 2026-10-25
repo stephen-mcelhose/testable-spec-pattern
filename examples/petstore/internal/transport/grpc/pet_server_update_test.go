@@ -10,7 +10,6 @@ import (
 
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
-	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
@@ -20,16 +19,12 @@ func TestPetServer_UpdatePet(t *testing.T) {
 	type testCase struct {
 		name string
 
-		req   *petstorev1.UpdatePetRequest
-		store stubStore
+		req  *petstorev1.UpdatePetRequest
+		pets stubPets
 
 		want           *petstorev1.Pet
 		wantCode       string
 		wantUpdateArgs []updateCall
-	}
-
-	validReq := &petstorev1.UpdatePetRequest{
-		Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 	}
 
 	testCases := []testCase{
@@ -40,68 +35,29 @@ func TestPetServer_UpdatePet(t *testing.T) {
 			wantUpdateArgs: nil,
 		},
 		{
-			name: "MUST return InvalidArgument when UpdatePetRequest fails business rules",
+			name: "MUST map pet fields to PetAPI and map the domain Pet to proto",
 			req: &petstorev1.UpdatePetRequest{
-				Pet: &petstorev1.Pet{Name: "fido", DisplayName: "Fido"},
+				Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
-			wantCode:       "INVALID_ARGUMENT",
-			wantUpdateArgs: nil,
-		},
-		{
-			name: "MUST update the pet and return the stored Pet",
-			req:  validReq,
-			store: stubStore{
+			pets: stubPets{
 				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			},
 			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{name: "pets/fido", displayName: "Fido", etag: "v1"},
 			},
 		},
 		{
-			name: "MUST update the pet when etag is omitted",
+			name: "MUST forward PetAPI errors",
 			req: &petstorev1.UpdatePetRequest{
-				Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido"},
+				Pet: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v1"},
 			},
-			store: stubStore{
-				updatePet: pet.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
-			},
-			want: &petstorev1.Pet{Name: "pets/fido", DisplayName: "Fido", Etag: "v2"},
-			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: ""},
-			},
-		},
-		{
-			name: "MUST return NotFound when the pet does not exist",
-			req:  validReq,
-			store: stubStore{
-				updateErr: &pet.NotFoundError{Message: "pets/fido not found"},
-			},
-			wantCode: "NOT_FOUND",
-			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
-			},
-		},
-		{
-			name: "MUST return Aborted when a provided etag does not match",
-			req:  validReq,
-			store: stubStore{
+			pets: stubPets{
 				updateErr: &pet.AbortedError{Message: "etag mismatch"},
 			},
 			wantCode: "ABORTED",
 			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
-			},
-		},
-		{
-			name: "MUST return Internal when update fails for a non-domain reason",
-			req:  validReq,
-			store: stubStore{
-				updateErr: errors.New("connection refused"),
-			},
-			wantCode: "INTERNAL",
-			wantUpdateArgs: []updateCall{
-				{pet: pet.Pet{Name: "pets/fido", DisplayName: "Fido"}, etag: "v1"},
+				{name: "pets/fido", displayName: "Fido", etag: "v1"},
 			},
 		},
 	}
@@ -109,12 +65,12 @@ func TestPetServer_UpdatePet(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			store := tc.store
-			srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
+			pets := tc.pets
+			srv := petgrpc.PetServer{Pets: &pets}
 
 			got, err := srv.UpdatePet(context.Background(), tc.req)
 
-			assert.Equal(t, tc.wantUpdateArgs, store.updateCalls, "Store.Update args")
+			assert.Equal(t, tc.wantUpdateArgs, pets.updateCalls, "PetAPI.UpdatePet args")
 			if tc.wantCode != "" {
 				require.Error(t, err)
 				var known pet.KnownError

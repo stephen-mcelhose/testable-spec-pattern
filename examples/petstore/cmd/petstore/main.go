@@ -11,6 +11,6 @@ func main() {
 	// Wire application service + gRPC adapter. A real server would inject a
 	// Store implementation and RegisterPetServiceServer on a grpc.Server.
 	pets := &service.PetService{}
-	_ = petgrpc.PetServer{Pets: pets}
+	_ = petgrpc.PetServer{Pets: pets} // PetAPI satisfied by *service.PetService
 	log.Println("petstore: ready")
 }

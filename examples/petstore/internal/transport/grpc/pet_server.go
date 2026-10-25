@@ -6,20 +6,30 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
-	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
+	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
 )
 
-// PetServer is the gRPC transport adapter for PetService.
-// It owns: (1) protovalidate shape, (2) proto ↔ domain mapping, (3) forward to app.
-// KnownError → google.rpc.Status mapping waits on server wiring.
+// PetAPI is the application port the transport adapter calls.
+// Defined here (usage site). *service.PetService satisfies it.
+type PetAPI interface {
+	CreatePet(ctx context.Context, petID, displayName string) (pet.Pet, error)
+	GetPet(ctx context.Context, name string) (pet.Pet, error)
+	UpdatePet(ctx context.Context, name, displayName, etag string) (pet.Pet, error)
+	DeletePet(ctx context.Context, name, etag string) error
+	ListPets(ctx context.Context, pageSize int32, pageToken string) (pets []pet.Pet, nextPageToken string, err error)
+}
+
+// PetServer is the gRPC transport adapter.
+// Owns: (1) protovalidate shape, (2) proto ↔ domain field mapping, (3) forward to PetAPI.
+// KnownError → google.rpc.Status mapping waits on server wiring / middleware.
 type PetServer struct {
 	petstorev1.UnimplementedPetServiceServer
-	Pets *service.PetService
+	Pets PetAPI
 }
 
 var _ petstorev1.PetServiceServer = (*PetServer)(nil)
 
-// CreatePet — shape → map → app CreatePet → map response.
+// CreatePet — shape → map fields → PetAPI → map response.
 func (s *PetServer) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequest) (*petstorev1.Pet, error) {
 	if err := validateShape(req); err != nil {
 		return nil, err
@@ -32,7 +42,7 @@ func (s *PetServer) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequ
 	return petToProto(created), nil
 }
 
-// GetPet — shape → map → app GetPet → map response.
+// GetPet — shape → map → PetAPI → map response.
 func (s *PetServer) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) (*petstorev1.Pet, error) {
 	if err := validateShape(req); err != nil {
 		return nil, err
@@ -45,7 +55,7 @@ func (s *PetServer) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) (
 	return petToProto(got), nil
 }
 
-// UpdatePet — shape → map → app UpdatePet → map response.
+// UpdatePet — shape → map → PetAPI → map response.
 func (s *PetServer) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetRequest) (*petstorev1.Pet, error) {
 	if err := validateShape(req); err != nil {
 		return nil, err
@@ -59,7 +69,7 @@ func (s *PetServer) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetRequ
 	return petToProto(updated), nil
 }
 
-// DeletePet — shape → map → app DeletePet.
+// DeletePet — shape → map → PetAPI.
 func (s *PetServer) DeletePet(ctx context.Context, req *petstorev1.DeletePetRequest) (*emptypb.Empty, error) {
 	if err := validateShape(req); err != nil {
 		return nil, err
@@ -71,7 +81,7 @@ func (s *PetServer) DeletePet(ctx context.Context, req *petstorev1.DeletePetRequ
 	return &emptypb.Empty{}, nil
 }
 
-// ListPets — shape → map → app ListPets → map response.
+// ListPets — shape → map → PetAPI → map response.
 func (s *PetServer) ListPets(ctx context.Context, req *petstorev1.ListPetsRequest) (*petstorev1.ListPetsResponse, error) {
 	if err := validateShape(req); err != nil {
 		return nil, err

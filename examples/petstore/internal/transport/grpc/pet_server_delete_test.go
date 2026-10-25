@@ -10,7 +10,6 @@ import (
 
 	petstorev1 "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/gen/petstore/v1"
 	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/pet"
-	"github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/service"
 	petgrpc "github.com/stephen-mcelhose/testable-spec-pattern/examples/petstore/internal/transport/grpc"
 )
 
@@ -20,8 +19,8 @@ func TestPetServer_DeletePet(t *testing.T) {
 	type testCase struct {
 		name string
 
-		req   *petstorev1.DeletePetRequest
-		store stubStore
+		req  *petstorev1.DeletePetRequest
+		pets stubPets
 
 		wantCode       string
 		wantDeleteArgs []deleteCall
@@ -29,18 +28,18 @@ func TestPetServer_DeletePet(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "MUST return InvalidArgument when the pet name fails business rules",
+			name: "MUST return InvalidArgument when DeletePetRequest fails shape validation",
 			req: &petstorev1.DeletePetRequest{
-				Name: "fido",
+				Name: "",
 				Etag: "v1",
 			},
 			wantCode:       "INVALID_ARGUMENT",
 			wantDeleteArgs: nil,
 		},
 		{
-			name: "MUST delete the pet when it exists",
+			name: "MUST map name and etag to PetAPI",
 			req: &petstorev1.DeletePetRequest{
-				Name: "  pets/fido  ",
+				Name: "pets/fido",
 				Etag: "v1",
 			},
 			wantDeleteArgs: []deleteCall{
@@ -48,35 +47,12 @@ func TestPetServer_DeletePet(t *testing.T) {
 			},
 		},
 		{
-			name: "MUST delete the pet when etag is omitted",
-			req: &petstorev1.DeletePetRequest{
-				Name: "pets/fido",
-			},
-			wantDeleteArgs: []deleteCall{
-				{name: "pets/fido", etag: ""},
-			},
-		},
-		{
-			name: "MUST return NotFound when the pet does not exist",
-			req: &petstorev1.DeletePetRequest{
-				Name: "pets/missing",
-				Etag: "v1",
-			},
-			store: stubStore{
-				deleteErr: &pet.NotFoundError{Message: "pets/missing not found"},
-			},
-			wantCode: "NOT_FOUND",
-			wantDeleteArgs: []deleteCall{
-				{name: "pets/missing", etag: "v1"},
-			},
-		},
-		{
-			name: "MUST return Aborted when a provided etag does not match",
+			name: "MUST forward PetAPI errors",
 			req: &petstorev1.DeletePetRequest{
 				Name: "pets/fido",
 				Etag: "stale",
 			},
-			store: stubStore{
+			pets: stubPets{
 				deleteErr: &pet.AbortedError{Message: "etag mismatch"},
 			},
 			wantCode: "ABORTED",
@@ -84,31 +60,17 @@ func TestPetServer_DeletePet(t *testing.T) {
 				{name: "pets/fido", etag: "stale"},
 			},
 		},
-		{
-			name: "MUST return Internal when delete fails for a non-domain reason",
-			req: &petstorev1.DeletePetRequest{
-				Name: "pets/fido",
-				Etag: "v1",
-			},
-			store: stubStore{
-				deleteErr: errors.New("connection refused"),
-			},
-			wantCode: "INTERNAL",
-			wantDeleteArgs: []deleteCall{
-				{name: "pets/fido", etag: "v1"},
-			},
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			store := tc.store
-			srv := petgrpc.PetServer{Pets: &service.PetService{Store: &store}}
+			pets := tc.pets
+			srv := petgrpc.PetServer{Pets: &pets}
 
 			_, err := srv.DeletePet(context.Background(), tc.req)
 
-			assert.Equal(t, tc.wantDeleteArgs, store.deleteCalls, "Store.Delete args")
+			assert.Equal(t, tc.wantDeleteArgs, pets.deleteCalls, "PetAPI.DeletePet args")
 			if tc.wantCode != "" {
 				require.Error(t, err)
 				var known pet.KnownError

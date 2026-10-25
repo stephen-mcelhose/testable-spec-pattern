@@ -135,7 +135,7 @@ Future skills: parent `wire-external-interface` (shape → rules → port → le
 3. Commit generated `*.pb.go` / `*_grpc.pb.go`.
 4. Adapter embeds `UnimplementedPetServiceServer` and satisfies `PetServiceServer`.
 5. `Store` speaks domain resource types (`pet.Pet`).
-6. Behavioral specs may exercise the adapter (external contract) and assert KnownError codes.
+6. Split tests by layer: `transport/grpc` owns shape + mapping to `PetAPI`; `service` owns business rules + Store. Do not assert business-rule failures in transport tests.
 
 ## Non-goals (this process)
 
