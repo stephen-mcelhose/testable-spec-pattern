@@ -29,11 +29,77 @@ Every type and function in the model is built from these two.
 
 ---
 
-## Steps
+## The process
 
-- `ExtractSubjects(idea)` → for each subject: `type <Subject> interface{ Undefined }`
-- `ExtractRelationships(idea, subjects)` → for each relation: `func <Verb><Subject>(subjectA, subjectB?) (<Result>, error)`
-- Composed functions call sub-functions explicitly in the body
-- Leaf functions (side effects, unknowns) return zero + `ErrUnimplemented`
-- Delegation points become a Strategy type — doc comment names the backing skill
-- `go build ./...` must pass before delivering
+### 1. Name the top-level operations
+
+Name what the system does as function signatures — inputs, outputs, errors. Name all types as you go; prefer `type <DomainName> interface{ Undefined }` as the initial form. Do not fill in the internals of a type until they are necessary to define something else — internals are implementation details until proven otherwise.
+
+```go
+func BookAppointment(request AppointmentRequest) (Appointment, error)
+func RecordVisit(appointment Appointment) (VisitRecord, error)
+```
+
+Filling in details before you understand the system as a whole is the trap this step avoids.
+
+### 2. Decompose into subjects and relations
+
+```
+subjects  := ExtractSubjects(idea)
+relations := ExtractRelationships(idea, subjects)
+
+for each subject  → type <Subject> interface{ Undefined }
+for each relation → func <Verb><Subject>(subjectA, subjectB?) (<Result>, error)
+  if the function composes sub-steps  → call them explicitly in the body
+  if the function is a leaf           → return zero, ErrUnimplemented
+  if the function delegates to a skill → declare a Strategy type instead
+```
+
+### 3. Iterate
+
+Expand each non-leaf function the same way: express it as a composition, then decompose further. Stop when every function is either a composition of named sub-functions or a leaf returning `ErrUnimplemented`.
+
+---
+
+## Subjects → types
+
+Each subject becomes a named interface embedding `Undefined`:
+
+```go
+// Patient is a person receiving veterinary care.
+type Patient interface{ Undefined }
+```
+
+Promote `Undefined` to a struct only when the fields matter to the model — not speculatively.
+
+---
+
+## Relations → functions
+
+Each relation becomes a named function. The name is the claim:
+
+```go
+// ScheduleAppointment books a patient into a time slot.
+func ScheduleAppointment(patient Patient, slot TimeSlot) (Appointment, error)
+```
+
+**Composed:** call sub-functions in the body — make the structure visible.
+
+**Leaf:** return zero + `ErrUnimplemented`. Add a `// Leaf:` comment explaining why.
+
+**Strategy seam:** when a step belongs to another skill, declare a function type. The doc comment names the skill:
+
+```go
+// SchedulingStrategy is backed by the scheduling-engine skill.
+type SchedulingStrategy func(patient Patient, clinic Clinic) (Appointment, error)
+```
+
+---
+
+## Verify
+
+```bash
+go build ./...
+```
+
+The model must compile. Fix every error before delivering.
