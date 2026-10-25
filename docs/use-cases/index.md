@@ -10,43 +10,39 @@ timestamp: 2026-10-25T21:24:53Z
 
 ## Requirements Gathering
 
-As a software engineer, I want to [Gather Requirements](./requirements-gathering/index.md) in order to inform [Contracts & Domain Modeling](./contracts-and-domain-modeling/index.md), [Specifications](./specifications/index.md), [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
+As a software engineer, I want to [Gather Requirements](./requirements-gathering/index.md) from an [Idea](./ideas/index.md) in order to inform [Contracts & Domain Modeling](./contracts-and-domain-modeling/index.md), [Specifications](./specifications/index.md), [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
 
 ## Contracts & Domain Modeling
 
-As a software engineer, I want to [Create Contracts](./contracts-and-domain-modeling/index.md) from [Requirements](./requirements-gathering/requirements.md) in order to inform [Specifications](./specifications/index.md), [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
+As a software engineer, I want to [Build Contracts](./contracts-and-domain-modeling/index.md) from [Requirements](./requirements-gathering/requirements.md) in order to inform [Specifications](./specifications/index.md), [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
 
-As a software engineer, I want to [Model the Domain](./contracts-and-domain-modeling/domain-modeling.md) from an [Idea](./requirements-gathering/index.md) — producing to inform downstream phases of software development.
+As a software engineer, I want to [Model the Domain](./contracts-and-domain-modeling/domain-modeling.md) from an [Idea](./ideas/index.md) in order to express structure and intent as Go types before Requirements are fully formed.
 
-As a software engineer, I want to [Model the Domain](./contracts-and-domain-modeling/domain-modeling.md) from [Requirements](./requirements-gathering/requirements.md) in order to inform downstream phases of software development.
+As a software engineer, I want to [Model the Domain](./contracts-and-domain-modeling/domain-modeling.md) from [Requirements](./requirements-gathering/requirements.md) in order to refine the model and inform [Contracts](./contracts-and-domain-modeling/contracts.md), [Specifications](./specifications/index.md), and [Implementation](./implementation/index.md).
 
 ## Specifications
 
-As a software engineer, I want to [Create Specifications](./specifications/index.md) from [Requirements](./requirements-gathering/requirements.md).
+As a software engineer, I want to [Write a Specification](./specifications/index.md) from [Requirements](./requirements-gathering/requirements.md) in order to inform [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
 
-As a software engineer, I want to [Create Specifications](./specifications/index.md) from [Requirements](./requirements-gathering/requirements.md) and [Contracts](./contracts-and-domain-modeling/contracts.md).
+As a software engineer, I want to [Write a Specification](./specifications/index.md) from [Requirements](./requirements-gathering/requirements.md) and [Contracts](./contracts-and-domain-modeling/contracts.md) in order to inform [Planning](./planning/index.md), [Implementation](./implementation/index.md), and [Testing](./testing/index.md) of software.
 
 ## Planning
 
-As a software engineer, I want to [Plan](./planning/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md).
+As a software engineer, I want to [Plan](./planning/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md) in order to inform [Implementation](./implementation/index.md) of software.
 
-As a software engineer, I want to [Plan](./planning/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md) and [Contracts](./contracts-and-domain-modeling/contracts.md).
+As a software engineer, I want to [Plan](./planning/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md) and [Contracts](./contracts-and-domain-modeling/contracts.md) in order to inform [Implementation](./implementation/index.md) of software.
 
 ## Implementation
 
-As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md).
+As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Contracts](./contracts-and-domain-modeling/contracts.md) and [Specifications](./specifications/index.md) in order to produce a working project verified through [Testing](./testing/index.md).
 
-As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md) and [Contracts](./contracts-and-domain-modeling/contracts.md).
-
-As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md), [Contracts](./contracts-and-domain-modeling/contracts.md), and [Specifications](./specifications/index.md).
-
-As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Contracts](./contracts-and-domain-modeling/contracts.md) and [Specifications](./specifications/index.md).
+As a software engineer, I want to [Implement](./implementation/index.md) a new feature from [Requirements](./requirements-gathering/requirements.md), [Contracts](./contracts-and-domain-modeling/contracts.md), and [Specifications](./specifications/index.md) in order to produce a working project verified through [Testing](./testing/index.md).
 
 ## Testing
 
-As a software engineer, I want to create [Runnable Specifications](./runnable-specifications/index.md) templated from [Specifications](./specifications/index.md) to facilitate [Test-Driven Development](./test-driven-development/index.md).
+As a software engineer, I want to [Create a Runnable Specification](./runnable-specifications/index.md) from a [Specification](./specifications/index.md) in order to verify that [Implementation](./implementation/index.md) satisfies its behavioral contracts.
 
-As a software engineer, I want to create [Runnable Specifications](./runnable-specifications/index.md) from [Implementations](./implementation/index.md) to realize the [Test-Driven Development](./test-driven-development/index.md) workflow.
+As a software engineer, I want to [Create a Runnable Specification](./runnable-specifications/index.md) from an [Implementation](./implementation/index.md) in order to retroactively document and lock the behavior of existing code.
 
 ## Deployment
 
