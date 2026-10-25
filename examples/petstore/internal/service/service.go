@@ -23,6 +23,9 @@ const (
 // Store is the persistence leaf used by PetService. Defined at the usage site
 // (Go idiom: small consumer-owned interfaces). Tests inject a hand stub; prefer
 // counterfeiter when call-count or argument capture is needed.
+//
+// This example keeps Store on generated petstorev1 types (thin wire). Introduce
+// domain objects + mappers when domain language diverges from the proto.
 type Store interface {
 	Create(ctx context.Context, p *petstorev1.Pet) (*petstorev1.Pet, error)
 	Get(ctx context.Context, name string) (*petstorev1.Pet, error)
@@ -32,9 +35,10 @@ type Store interface {
 }
 
 // PetService is a thin AIP-flavoured Pets API over generated petstorev1 types:
-// (1) protovalidate.Validate shape → (2) business rules → (3) Store + error map.
+// (1) protovalidate.Validate shape → (2) validate*BusinessRules → (3) Store + error map.
 // Embeds UnimplementedPetServiceServer so UploadPhoto stays unimplemented
-// until a later issue; gRPC server registration is out of scope here.
+// until a later issue; a separate transport adapter (KnownError → gRPC status)
+// waits on server wiring.
 type PetService struct {
 	petstorev1.UnimplementedPetServiceServer
 	Store Store
@@ -46,20 +50,15 @@ var _ petstorev1.PetServiceServer = (*PetService)(nil)
 // the body is ignored; returns the fully populated stored Pet.
 // Duplicate id → AlreadyExists.
 func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape — must be a valid CreatePetRequest (buf.validate).
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate (buf.validate).
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
-	// 2. Business rules — user-specified pet_id required in this example
-	// (system-generated ids when pet_id omitted are out of scope); display_name required.
-	name, err := petNameFromID(req.GetPetId())
+	// 2. Business rules.
+	name, display, err := validateCreatePetBusinessRules(req)
 	if err != nil {
 		return nil, err
-	}
-	display := strings.TrimSpace(req.GetPet().GetDisplayName())
-	if display == "" {
-		return nil, &pet.InvalidArgumentError{Message: "display_name is required"}
 	}
 
 	// 3. Implementation — delegate to storage.
@@ -72,13 +71,13 @@ func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetReq
 
 // GetPet validates the resource name and returns the stored Pet.
 func (s *PetService) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape — must be a valid GetPetRequest (buf.validate).
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate (buf.validate).
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
-	// 2. Business rules — name must be a canonical pets/{pet} id.
-	canonical, err := pet.NormalizePetName(req.GetName())
+	// 2. Business rules.
+	canonical, err := validateGetPetBusinessRules(req)
 	if err != nil {
 		return nil, err
 	}
@@ -95,21 +94,16 @@ func (s *PetService) GetPet(ctx context.Context, req *petstorev1.GetPetRequest) 
 // optional freshness (AIP-154) — when set and mismatched, Store returns Aborted.
 // Returns the fully populated stored Pet. update_mask / allow_missing are out of scope.
 func (s *PetService) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape — must be a valid UpdatePetRequest (buf.validate).
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate (buf.validate).
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
-	// 2. Business rules — name shape; display_name required; etag optional.
-	name, err := pet.NormalizePetName(req.GetPet().GetName())
+	// 2. Business rules.
+	name, display, etag, err := validateUpdatePetBusinessRules(req)
 	if err != nil {
 		return nil, err
 	}
-	display := strings.TrimSpace(req.GetPet().GetDisplayName())
-	if display == "" {
-		return nil, &pet.InvalidArgumentError{Message: "display_name is required"}
-	}
-	etag := strings.TrimSpace(req.GetPet().GetEtag())
 
 	// 3. Implementation — delegate to storage.
 	updated, err := s.Store.Update(ctx, &petstorev1.Pet{Name: name, DisplayName: display}, etag)
@@ -122,19 +116,19 @@ func (s *PetService) UpdatePet(ctx context.Context, req *petstorev1.UpdatePetReq
 // DeletePet deletes the pet (AIP-135). Etag is optional protected-delete freshness
 // (AIP-154): when provided and mismatched, Store returns Aborted.
 func (s *PetService) DeletePet(ctx context.Context, req *petstorev1.DeletePetRequest) (*emptypb.Empty, error) {
-	// 1. Proto / shape — must be a valid DeletePetRequest (buf.validate).
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate (buf.validate).
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
-	// 2. Business rules — name shape; etag optional.
-	canonical, err := pet.NormalizePetName(req.GetName())
+	// 2. Business rules.
+	canonical, etag, err := validateDeletePetBusinessRules(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// 3. Implementation — delegate to storage.
-	if err := s.Store.Delete(ctx, canonical, strings.TrimSpace(req.GetEtag())); err != nil {
+	if err := s.Store.Delete(ctx, canonical, etag); err != nil {
 		return nil, mapStoreError(err)
 	}
 	return &emptypb.Empty{}, nil
@@ -143,18 +137,15 @@ func (s *PetService) DeletePet(ctx context.Context, req *petstorev1.DeletePetReq
 // ListPets lists pets (AIP-132 / AIP-158): default and coerce page_size; return a
 // page. Empty collection is success. filter / order_by / show_deleted are out of scope.
 func (s *PetService) ListPets(ctx context.Context, req *petstorev1.ListPetsRequest) (*petstorev1.ListPetsResponse, error) {
-	// 1. Proto / shape — must be a valid ListPetsRequest (buf.validate; page_size >= 0).
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate (buf.validate).
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
-	// 2. Business rules — page_size default + coerce above max (AIP-132).
-	pageSize := req.GetPageSize()
-	if pageSize == 0 {
-		pageSize = defaultPageSize
-	}
-	if pageSize > maxPageSize {
-		pageSize = maxPageSize // AIP-132: coerce above max; do not error
+	// 2. Business rules.
+	pageSize, err := validateListPetsBusinessRules(req)
+	if err != nil {
+		return nil, err
 	}
 
 	// 3. Implementation — delegate to storage.
@@ -168,10 +159,12 @@ func (s *PetService) ListPets(ctx context.Context, req *petstorev1.ListPetsReque
 	return &petstorev1.ListPetsResponse{Pets: pets, NextPageToken: next}, nil
 }
 
-// validateShape runs step 1: nil guard (incl. typed-nil proto.Message), then
+// validateShape is the stereotypical proto shape check: nil guard, then
 // protovalidate.Validate against buf.validate constraints on the request.
-func validateShape(msg proto.Message) error {
-	if msg == nil || isNilProto(msg) {
+// Shape violations MUST map to InvalidArgument; storage MUST NOT be called.
+func validateShape[T proto.Message](msg T) error {
+	var zero T
+	if any(msg) == any(zero) || isNilProto(msg) {
 		return &pet.InvalidArgumentError{Message: "request is required"}
 	}
 	if err := protovalidate.Validate(msg); err != nil {
@@ -189,6 +182,65 @@ func isNilProto(msg proto.Message) bool {
 	default:
 		return false
 	}
+}
+
+// validateCreatePetBusinessRules applies CreatePet rules beyond buf.validate.
+// User-specified pet_id is required in this example (system-generated ids out of scope);
+// display_name is required after trim.
+func validateCreatePetBusinessRules(req *petstorev1.CreatePetRequest) (name, display string, err error) {
+	name, err = petNameFromID(req.GetPetId())
+	if err != nil {
+		return "", "", err
+	}
+	display = strings.TrimSpace(req.GetPet().GetDisplayName())
+	if display == "" {
+		return "", "", &pet.InvalidArgumentError{Message: "display_name is required"}
+	}
+	return name, display, nil
+}
+
+// validateGetPetBusinessRules applies GetPet rules beyond buf.validate:
+// name must be a canonical pets/{pet} id (trim + format).
+func validateGetPetBusinessRules(req *petstorev1.GetPetRequest) (canonical string, err error) {
+	return pet.NormalizePetName(req.GetName())
+}
+
+// validateUpdatePetBusinessRules applies UpdatePet rules beyond buf.validate:
+// name shape; display_name required after trim; etag optional (trimmed).
+func validateUpdatePetBusinessRules(req *petstorev1.UpdatePetRequest) (name, display, etag string, err error) {
+	name, err = pet.NormalizePetName(req.GetPet().GetName())
+	if err != nil {
+		return "", "", "", err
+	}
+	display = strings.TrimSpace(req.GetPet().GetDisplayName())
+	if display == "" {
+		return "", "", "", &pet.InvalidArgumentError{Message: "display_name is required"}
+	}
+	etag = strings.TrimSpace(req.GetPet().GetEtag())
+	return name, display, etag, nil
+}
+
+// validateDeletePetBusinessRules applies DeletePet rules beyond buf.validate:
+// name shape; etag optional (trimmed).
+func validateDeletePetBusinessRules(req *petstorev1.DeletePetRequest) (canonical, etag string, err error) {
+	canonical, err = pet.NormalizePetName(req.GetName())
+	if err != nil {
+		return "", "", err
+	}
+	return canonical, strings.TrimSpace(req.GetEtag()), nil
+}
+
+// validateListPetsBusinessRules applies ListPets rules beyond buf.validate:
+// default page_size 50; coerce above max 100 (AIP-132). Negative page_size is shape.
+func validateListPetsBusinessRules(req *petstorev1.ListPetsRequest) (pageSize int32, err error) {
+	pageSize = req.GetPageSize()
+	if pageSize == 0 {
+		pageSize = defaultPageSize
+	}
+	if pageSize > maxPageSize {
+		pageSize = maxPageSize
+	}
+	return pageSize, nil
 }
 
 // petNameFromID builds pets/{pet_id} and validates via NormalizePetName (AIP-133).

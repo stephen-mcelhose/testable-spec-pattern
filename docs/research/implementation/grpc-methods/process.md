@@ -3,7 +3,7 @@ type: how-to
 title: "gRPC method implementation process"
 description: Three-step fill-out for each generated RPC — protovalidate shape, business rules, then storage — distilled from wiring PetService to petstorev1 types.
 tags: [grpc, proto, implementation, petstore, aip, protovalidate]
-timestamp: 2026-10-25T18:26:36Z
+timestamp: 2026-10-25T18:56:31Z
 ---
 
 # gRPC method implementation process
@@ -14,17 +14,21 @@ When a service already has generated request/response types (`protoc-gen-go` / `
 
 Worked example: `examples/petstore` `PetService` over `internal/gen/petstore/v1` (`petstorev1`).
 
+This page is a how-to. The RFC 2119 MUSTS below are the seed for a future behavioral-spec / skill checklist — we are not splitting a second competing RFC doc here.
+
 ## The three steps
 
 Every method body follows the same order. First step is **always** proto shape validation via `protovalidate.Validate`.
 
-### 1. Proto / shape validation — must be a valid `<Type>Request`
+### 1. Proto / shape validation — MUST be a valid `<Type>Request`
 
-Encode shape in the `.proto` with `buf.validate` annotations (`required`, `string.min_len`, `int32.gte`, …). At the top of every method:
+Encode shape in the `.proto` with `buf.validate` annotations (`required`, `string.min_len`, `int32.gte`, …).
 
-1. Nil-guard the request (`protovalidate.Validate(nil)` is a no-op).
-2. Call `protovalidate.Validate(req)`.
-3. On failure, return `InvalidArgument` (or the project's typed stand-in) with the validation error message. Do not call storage.
+- A method **MUST** validate request shape with `protovalidate.Validate` (constraints from `buf.validate` on the request message). Use the shared `validateShape[T proto.Message]` helper (nil / typed-nil guard, then `protovalidate.Validate`).
+- Shape violations **MUST** map to `InvalidArgument` (project typed stand-in OK).
+- Storage **MUST NOT** be called on shape failure.
+
+Do **not** hand-roll REQUIRED-field ifs when a `buf.validate` constraint already covers them. Shape lives in the proto; Go runs the stereotypical check.
 
 ```go
 if err := validateShape(req); err != nil {
@@ -32,11 +36,9 @@ if err := validateShape(req); err != nil {
 }
 ```
 
-`validateShape` is the shared helper: nil check → `protovalidate.Validate` → map to `InvalidArgumentError`.
-
-Do **not** hand-roll REQUIRED-field ifs when a `buf.validate` constraint already covers them. Shape lives in the proto; the Go is just the runtime check.
-
 ### 2. Business rules — listed rules, or room left
+
+Encapsulate in `validate<Method>BusinessRules(...)`. A no-op that returns success (and any coerced values) is the easy default when there are no extra rules.
 
 Rules that are true for this product but are not (yet) encoded as `buf.validate` constraints:
 
@@ -61,19 +63,15 @@ Return the stored resource (or `google.protobuf.Empty` for Delete). Do not re-de
 
 ```go
 func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetRequest) (*petstorev1.Pet, error) {
-	// 1. Proto / shape — protovalidate.Validate (buf.validate on CreatePetRequest)
+	// 1. Proto / shape — stereotypical check: protovalidate.Validate
 	if err := validateShape(req); err != nil {
 		return nil, err
 	}
 
 	// 2. Business rules
-	name, err := nameFromID(req.GetPetId())
+	name, display, err := validateCreatePetBusinessRules(req)
 	if err != nil {
 		return nil, err
-	}
-	display := strings.TrimSpace(req.GetPet().GetDisplayName())
-	if display == "" {
-		return nil, invalidArgument("display_name is required")
 	}
 
 	// 3. Storage
@@ -84,8 +82,10 @@ func (s *PetService) CreatePet(ctx context.Context, req *petstorev1.CreatePetReq
 	return created, nil
 }
 
-func validateShape(msg proto.Message) error {
-	if msg == nil || isNilProto(msg) { // typed-nil *Request boxed as proto.Message
+// Stereotypical proto shape engine: protovalidate.Validate over buf.validate.
+func validateShape[T proto.Message](msg T) error {
+	var zero T
+	if any(msg) == any(zero) || isNilProto(msg) {
 		return invalidArgument("request is required")
 	}
 	if err := protovalidate.Validate(msg); err != nil {
@@ -93,6 +93,9 @@ func validateShape(msg proto.Message) error {
 	}
 	return nil
 }
+
+// No-op default when a method has no extra rules:
+// func validateFooBusinessRules(req *FooRequest) error { return nil }
 ```
 
 ## Proto side (shape contract)
@@ -118,13 +121,31 @@ message ListPetsRequest {
 
 After editing constraints: `buf generate`, commit regenerated Go under `internal/gen/`.
 
+## Boundary choice
+
+Defaults for this thin-wire example; flip when the criteria below are met.
+
+### Store on proto types vs domain objects
+
+**Default here:** `Store` speaks `*petstorev1.Pet`. The teaching target is the method fill-out ritual (shape → rules → storage). A parallel domain `Pet` is ceremony until domain language diverges.
+
+**Flip when:** domain terms diverge from proto; multiple transports share one model; rich invariants must not depend on generated code. Then map `petstorev1.Pet` ↔ `domain.Pet` at the boundary; Store speaks domain.
+
+### Service embeds generated server vs transport adapter
+
+**Default here:** `PetService` embeds `UnimplementedPetServiceServer` and satisfies `PetServiceServer`. That *is* wiring to the external contract. Typed `KnownError` stands in for `google.rpc.Status`.
+
+**Flip when:** mapping KnownError → gRPC codes/details; interceptors; multi-service registration. Then a thin `internal/transport/grpc` (or similar) adapter owns status mapping; domain/application service stays free of generated server types.
+
+Future skills: parent `wire-external-interface` (shape → rules → port → leaf); child `wire-grpc-service` (generated `*Server`, protovalidate, `validate*BusinessRules`, status map, optional domain map).
+
 ## Wiring checklist
 
 1. `buf.gen.yaml` emits Go under `internal/gen/` (`paths=source_relative`).
-2. Request messages carry `buf.validate` for shape; service calls `protovalidate.Validate`.
+2. Request messages carry `buf.validate` for shape; service calls `protovalidate.Validate` via `validateShape`.
 3. Commit generated `*.pb.go` / `*_grpc.pb.go`.
 4. Service embeds `UnimplementedPetServiceServer` and satisfies `PetServiceServer` (unimplemented RPCs stay on the embed until their issue).
-5. `Store` speaks generated resource types (`*petstorev1.Pet`), not hand-written twins.
+5. `Store` speaks generated resource types (`*petstorev1.Pet`), not hand-written twins — until Boundary choice says otherwise.
 6. Behavioral specs take `*petstorev1.<Method>Request` and assert KnownError codes — same MUST language as before.
 
 ## Non-goals (this process)
@@ -132,6 +153,7 @@ After editing constraints: `buf generate`, commit regenerated Go under `internal
 - gRPC server registration / transport wiring
 - Mapping `KnownError` → `google.rpc.Status` codes at the wire boundary
 - Implementing every RPC on the service in one pass (UploadPhoto can wait)
+- Introducing a domain package solely to satisfy Clean/Onion layering
 
 ## References
 
