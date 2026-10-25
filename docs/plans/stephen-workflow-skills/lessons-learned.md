@@ -16,7 +16,7 @@ Side note for agents and humans implementing 04+. Distilled from shipping `01-pu
 
 - **One `go.mod` at `examples/`**; packages in example folders. Directory names may not match `package` clauses (`pet` under `01-pure-function`). No per-example modules and no `replace` chains.
 - **Agent lookup by path:** when two wirings share contracts (functional vs method injection), put each under its own subdir (`functional/`, `method/`) so an agent opens one folder. Prefer **self-contained suites per package** over a shared helper across packages (duplicate MUST tables are fine; agents should not chase imports to read the contract).
-- **RPC / leaf lookup by file name:** flat package + `service_<method>_test.go` / `store_<method>_test.go` and `TestPetService_<Method>` is enough — no per-RPC subdirs unless suites get huge.
+- **RPC / leaf lookup by test name:** flat package + `service_test.go` (or `store_test.go`) with `TestPetService_<Method>` is enough — do not split one `_test.go` per method unless the suite is huge; no per-RPC subdirs.
 - Define **consumer-owned interfaces at the usage site** (`Store` next to `PetService`, not a separate `store.go` package of interfaces).
 - Real `.go` / `_test.go`. Pattern READMEs may point at the package. Do not ship paste-only `.go.md` as the artifact.
 - Keep example code **clean enough to copy** (boring, idiomatic). Janky char-loops undermine the example even if tests pass.
@@ -102,6 +102,6 @@ go test ./... -count=1
 
 - Pure function: `examples/01-pure-function/` (`package pet`)
 - Injected dep: `examples/02-injected-dependency/functional/` and `…/method/`
-- Resource CRUD: `examples/03-petstore-api/` — `service_<method>_test.go` / `TestPetService_<Method>`
+- Resource CRUD: `examples/03-petstore-api/` — `service_test.go` / `TestPetService_<Method>`
 - Store + DB: `examples/04-in-memory-store/` — KnownError Store contract; stub injected `DB`
 - Discipline: `../../skills/go-behavioral-spec/references/discipline.md` (do not invent new discipline bullets mid-example unless Stephen asks)

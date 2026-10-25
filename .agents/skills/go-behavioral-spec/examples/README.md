@@ -9,7 +9,7 @@ Canonical examples for the behavioral-spec discipline. Copy **structure and nami
 | Pure function | [`01-pure-function/`](./01-pure-function/) |
 | Injected dep — **function arg** | [`02-injected-dependency/functional/`](./02-injected-dependency/functional/) |
 | Injected dep — **struct method** | [`02-injected-dependency/method/`](./02-injected-dependency/method/) |
-| Resource-oriented CRUD | [`03-petstore-api/`](./03-petstore-api/) — open `service_<method>_test.go` |
+| Resource-oriented CRUD | [`03-petstore-api/`](./03-petstore-api/) — open `service_test.go` / `TestPetService_<Method>` |
 | Store + injected DB (KnownErrors) | [`04-in-memory-store/`](./04-in-memory-store/) — open `store_<method>_test.go` |
 
 ```bash

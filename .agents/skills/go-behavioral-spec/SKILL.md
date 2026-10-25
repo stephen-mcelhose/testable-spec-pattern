@@ -124,7 +124,15 @@ t.Run("OPEN: CorrelationId MUST be included in annotations when present", func(t
 
 ## Stubs
 
-Prefer counterfeiter fakes when the interface has them or needs call-count / argument capture (`make generate-fakes`). Hand-roll a local stub for a tiny test-only stand-in; extract to a shared `*_stubs_test.go` only if multiple test files need it. See `references/discipline.md` (File layout).
+Prefer counterfeiter fakes when the interface has them or needs call-count / argument capture (`make generate-fakes`). Hand-roll a local stub in the same `_test.go` when a tiny test-only stand-in is enough. Extract a shared `*_stubs_test.go` only if multiple test *files* need it. See `references/discipline.md` (File layout).
+
+---
+
+## File layout
+
+**Default: one test file per source file** — `service.go` → `service_test.go`. Put every `TestService_<Method>` suite for that type in that one file. Lookup is by **test function name** (`TestPetService_CreatePet`), not by splitting `service_create_test.go` / `service_get_test.go` / …
+
+**MUST NOT** create one `_test.go` per method for a single service type unless a suite has grown large enough that the file is hard to navigate — then split as an exception, not the default.
 
 ---
 
