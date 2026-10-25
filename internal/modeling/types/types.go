@@ -28,10 +28,6 @@ type CompletedProject struct {
 // not a fixed composition.
 type Requirements interface{ Undefined }
 
-type GatherRequirementStrategy func(existing Requirements, idea Idea) (Requirements, error)
-
-type BuildContractStrategy func(existing Contracts, requirements Requirements) (Contracts, error)
-
 // UseCase describes a single actor–goal interaction with the system.
 type UseCase interface{ Undefined }
 
@@ -106,3 +102,31 @@ type RunnableSpecification interface {
 func IsVerifiedProject(project BuiltProject) bool {
 	return project.Specification().Run() == nil
 }
+
+// Strategy types.
+// Each strategy takes the current accumulated output and the phase inputs,
+// returning the updated output. Strategies are applied in sequence,
+// allowing composition of independent skills into a single phase.
+
+// Requirements gathering strategies.
+type GatherRequirementStrategy func(existing Requirements, idea Idea) (Requirements, error)
+type WriteUseCasesStrategy func(existing []UseCase, idea Idea) ([]UseCase, error)
+type SketchDomainTypesStrategy func(existing DomainSketch, idea Idea, useCases []UseCase) (DomainSketch, error)
+type WriteGherkinScenariosStrategy func(existing []GherkinScenario, useCases []UseCase, sketch DomainSketch) ([]GherkinScenario, error)
+
+// Contracts & domain modeling strategies.
+type ModelDomainStrategy func(existing CodeContracts, idea Idea) (CodeContracts, error)
+type BuildContractStrategy func(existing Contracts, requirements Requirements) (Contracts, error)
+type BuildWireContractsStrategy func(existing ProtoContracts, requirements Requirements) (ProtoContracts, error)
+type DesignResourceModelStrategy func(existing []Resource, requirements Requirements) ([]Resource, error)
+type DefineServicesStrategy func(existing []Service, resources []Resource) ([]Service, error)
+type GenerateProtoFilesStrategy func(existing []ProtoFile, services []Service) ([]ProtoFile, error)
+
+// Specification strategies.
+type WriteSpecificationStrategy func(existing Specification, requirements Requirements, contracts Contracts) (Specification, error)
+
+// Implementation strategies.
+type ImplementStrategy func(existing BuiltProject, requirements Requirements, contracts Contracts) (BuiltProject, error)
+type ScaffoldGoProjectStrategy func(existing GoProject, requirements Requirements) (GoProject, error)
+type GenerateFromContractsStrategy func(existing GeneratedCode, contracts ProtoContracts) (GeneratedCode, error)
+type WireServicesStrategy func(existing BuiltProject, project GoProject, generated GeneratedCode, contracts Contracts) (BuiltProject, error)
