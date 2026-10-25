@@ -82,6 +82,8 @@ Promote `Undefined` to a struct only when the fields matter to the model — not
 
 ## Relations → functions
 
+Names — of types and functions — come from the domain, not from implementation tools or technology. A type is `GeneratedCode`, not `ProtoGeneration`. A function is `GenerateFromContracts`, not `GenerateGoFromProto`. If the name contains a library, a protocol, or a framework, it is probably wrong.
+
 Each relation becomes a named function. The name is the claim:
 
 ```go

@@ -9,7 +9,7 @@ func Implement(requirements types.Requirements, contracts types.ProtoContracts) 
 	if err != nil {
 		return nil, err
 	}
-	generated, err := GenerateGoFromProto(contracts)
+	generated, err := GenerateFromContracts(contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -23,17 +23,17 @@ func ScaffoldGoProject(requirements types.Requirements) (types.GoProject, error)
 	return nil, types.ErrUnimplemented
 }
 
-// GenerateGoFromProto runs buf generate against the proto files,
-// producing Go types and gRPC stubs.
-// Leaf: side effect — invokes buf, writes generated files to disk.
-func GenerateGoFromProto(contracts types.ProtoContracts) (types.ProtoGeneration, error) {
+// GenerateFromContracts runs codegen against the contracts,
+// producing Go types and service stubs.
+// Leaf: side effect — invokes codegen tooling, writes generated files to disk.
+func GenerateFromContracts(contracts types.ProtoContracts) (types.GeneratedCode, error) {
 	return nil, types.ErrUnimplemented
 }
 
-// WireServices connects service implementations to generated proto types,
+// WireServices connects service implementations to generated code,
 // producing a BuiltProject whose specification can be run.
 // Leaf: side effect — writes Go source files to disk.
-func WireServices(project types.GoProject, generated types.ProtoGeneration, contracts types.ProtoContracts) (types.BuiltProject, error) {
+func WireServices(project types.GoProject, generated types.GeneratedCode, contracts types.ProtoContracts) (types.BuiltProject, error) {
 	return nil, types.ErrUnimplemented
 }
 

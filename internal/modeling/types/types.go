@@ -84,29 +84,15 @@ type BuiltProject interface {
 // GoProject is a scaffolded Go module with idiomatic layout.
 type GoProject interface{ Undefined }
 
-// ProtoGeneration is the output of running buf generate — generated Go types
-// and gRPC stubs derived from the proto files.
-type ProtoGeneration interface{ Undefined }
+// GeneratedCode is the output of contract codegen —
+// Go types and service stubs derived from the contracts.
+type GeneratedCode interface{ Undefined }
 
 // CodeArtifact is the output of the model-as-code phase —
 // a Go package expressing a domain model using types, interfaces,
 // and strategy functions as the modeling primitives.
 type CodeArtifact interface{ Undefined }
 
-// Subject is a domain entity extracted from an Idea —
-// the raw material for a DomainType or Go interface.
-type Subject interface{ Undefined }
-
-// Interaction is a relationship, operation, or behaviour between Subjects —
-// the raw material for a Go function.
-type Interaction interface{ Undefined }
-
-// GoType is a modeled Subject expressed as a Go type definition.
-type GoType interface{ Undefined }
-
-// GoFunction is a modeled Interaction expressed as a Go function signature
-// and, where it composes sub-functions, its body.
-type GoFunction interface{ Undefined }
 
 // RunnableSpecification is the executable form of the spec — Go tests named as
 // RFC 2119 requirements. A passing run means the implementation satisfies its contracts.
