@@ -2,11 +2,22 @@ package modeling
 
 import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/types"
 
-// GatherRequirements takes an idea and produces structured requirements.
-// It composes three sub-skills: writing use cases, sketching the domain,
-// and deriving Gherkin scenarios from those use cases.
-func GatherRequirements(idea types.Idea, strategy types.GatherRequirementsStrategy) (types.Requirements, error) {
-	return strategy(idea)
+// GatherRequirements takes an idea and produces structured requirements by
+// composing use-case writing, domain sketching, and Gherkin scenario derivation.
+func GatherRequirements(idea types.Idea) (types.Requirements, error) {
+	useCases, err := WriteUseCases(idea)
+	if err != nil {
+		return types.Requirements{}, err
+	}
+	sketch, err := SketchDomainTypes(idea, useCases)
+	if err != nil {
+		return types.Requirements{}, err
+	}
+	scenarios, err := WriteGherkinScenarios(useCases, sketch)
+	if err != nil {
+		return types.Requirements{}, err
+	}
+	return types.Requirements{UseCases: useCases, Sketch: sketch, Scenarios: scenarios}, nil
 }
 
 // WriteUseCases interrogates an idea and produces a set of use cases —

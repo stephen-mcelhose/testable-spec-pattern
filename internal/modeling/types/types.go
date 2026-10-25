@@ -9,25 +9,17 @@ type Undefined = any
 // or implementation details not yet modeled.
 var ErrUnimplemented = errors.New("unimplemented")
 
-// ---------------------------------------------------------------------------
-// Core lifecycle types
-// ---------------------------------------------------------------------------
-
 // Idea is the raw starting material — a product idea, a user story,
 // a feature request, a domain description. Not yet structured.
 type Idea interface{ Undefined }
 
-// CompletedProject is the full output of the workflow.
+// CompletedProject is the full output of the workflow — provenance plus the
+// built project carrying its runnable specification.
 type CompletedProject struct {
-	Requirements  Requirements
-	Contracts     ProtoContracts
-	Artifact      Artifact
-	Specification Specification
+	Requirements Requirements
+	Contracts    ProtoContracts
+	Project      BuiltProject
 }
-
-// ---------------------------------------------------------------------------
-// Requirements Gathering
-// ---------------------------------------------------------------------------
 
 // Requirements is the structured output of the requirements-gathering phase.
 type Requirements struct {
@@ -64,10 +56,6 @@ type DomainRelation interface{ Undefined }
 // grounded in domain names.
 type GherkinScenario interface{ Undefined }
 
-// ---------------------------------------------------------------------------
-// Contract Design
-// ---------------------------------------------------------------------------
-
 // ProtoContracts is the output of the contract-design phase.
 type ProtoContracts struct {
 	Files []ProtoFile
@@ -86,21 +74,11 @@ type Service interface{ Undefined }
 // Method is a single RPC method on a Service.
 type Method interface{ Undefined }
 
-// ---------------------------------------------------------------------------
-// Implementation
-// ---------------------------------------------------------------------------
-
-// Artifact is the output of the implementation phase —
-// a scaffolded, wired Go project satisfying the contracts.
-type Artifact interface {
-	Undefined
-}
-
-// ArtifactWithRunnableSpecification is the concrete artifact produced when
-// Implement succeeds and the output includes a runnable specification.
-// This is the normal case: a completed implementation always includes its spec.
-type ArtifactWithRunnableSpecification struct {
-	Artifact
+// BuiltProject is the output of the implementation phase — a scaffolded,
+// wired Go project satisfying its contracts. Every project built by this
+// workflow carries a runnable specification: that is the domain invariant.
+type BuiltProject interface {
+	GetSpecification() RunnableSpecification
 }
 
 // GoProject is a scaffolded Go module with idiomatic layout.
@@ -109,10 +87,6 @@ type GoProject interface{ Undefined }
 // ProtoGeneration is the output of running buf generate — generated Go types
 // and gRPC stubs derived from the proto files.
 type ProtoGeneration interface{ Undefined }
-
-// ---------------------------------------------------------------------------
-// Model as Code
-// ---------------------------------------------------------------------------
 
 // CodeArtifact is the output of the model-as-code phase —
 // a Go package expressing a domain model using types, interfaces,
@@ -134,67 +108,17 @@ type GoType interface{ Undefined }
 // and, where it composes sub-functions, its body.
 type GoFunction interface{ Undefined }
 
-// ---------------------------------------------------------------------------
-// Specification
-// ---------------------------------------------------------------------------
-
-// Specification is the runnable specification — the artifact that is
-// executed to verify that the contracts are satisfied.
-type Specification interface{ Undefined }
-
 // RunnableSpecification is the executable form of the spec — Go tests named as
-// RFC 2119 requirements. Running it is the definition of a completed project:
-// a passing run means the implementation satisfies its contracts.
-type RunnableSpecification struct {
-	Artifact
+// RFC 2119 requirements. A passing run means the implementation satisfies its contracts.
+type RunnableSpecification interface {
+	// Run executes the specification. Returns an error if any requirement is violated.
+	// In practice this invokes go-behavioral-spec — the test suite is the spec.
+	Run() error
 }
 
-func NewRunnableSpecification(artifact ArtifactWithRunnableSpecification) RunnableSpecification {
-	return RunnableSpecification{Artifact: artifact}
+// IsVerifiedProject reports whether a BuiltProject's specification passes.
+func IsVerifiedProject(project BuiltProject) bool {
+	return project.GetSpecification().Run() == nil
 }
 
-// Run executes the specification. Returns an error if any requirement is violated.
-// In practice this invokes go-behavioral-spec — the test suite is the spec.
-func (r RunnableSpecification) Run() error {
-	return ErrUnimplemented
-}
 
-// ---------------------------------------------------------------------------
-// Strategies — pluggable phase implementations, each backed by a skill
-// ---------------------------------------------------------------------------
-
-// GatherRequirementsStrategy is the pluggable behaviour for the requirements-gathering phase.
-// In practice each implementation is an agentic skill:
-//   - write-use-cases
-//   - sketch-domain-types
-//   - write-gherkin-scenarios
-//
-// A composite strategy may chain these in sequence.
-type GatherRequirementsStrategy func(idea Idea) (Requirements, error)
-
-// DefaultGatherRequirementsStrategy is a no-op placeholder.
-// Replace with a real strategy backed by the requirements-gathering skills.
-func DefaultGatherRequirementsStrategy(idea Idea) (Requirements, error) {
-	return Requirements{}, ErrUnimplemented
-}
-
-// BuildContractsStrategy is the pluggable behaviour for the contract-design phase.
-// In practice the implementation is the resource-oriented-design skill,
-// which produces AIP-compliant proto/OpenAPI/ROD definitions from requirements.
-type BuildContractsStrategy func(requirements Requirements) (ProtoContracts, error)
-
-// ImplementStrategy is the pluggable behaviour for the implementation phase.
-// In practice the implementation is the go-project-scaffold skill plus
-// any proto-wiring steps. Returns ArtifactWithRunnableSpecification so the
-// caller can extract and run the specification without type-asserting.
-type ImplementStrategy func(requirements Requirements, contracts ProtoContracts) (Artifact, error)
-
-// DefaultImplementStrategy is a no-op placeholder.
-// Replace with a real strategy backed by the implementation skills.
-func DefaultImplementStrategy(requirements Requirements, contracts ProtoContracts) (ArtifactWithRunnableSpecification, error) {
-	return ArtifactWithRunnableSpecification{}, ErrUnimplemented
-}
-
-// ModelAsCodeStrategy is the pluggable behaviour for the model-as-code phase.
-// In practice the implementation is the model-as-code skill.
-type ModelAsCodeStrategy func(idea Idea) (CodeArtifact, error)

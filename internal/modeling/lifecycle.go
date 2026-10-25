@@ -5,7 +5,7 @@ import "github.com/stephen-mcelhose/testable-spec-pattern/internal/modeling/type
 // ExecuteSoftwareDevelopmentWorkflow is the top-level function.
 // It composes the four phases in sequence.
 func ExecuteSoftwareDevelopmentWorkflow(idea types.Idea) (types.CompletedProject, error) {
-	requirements, err := GatherRequirements(idea, types.DefaultGatherRequirementsStrategy)
+	requirements, err := GatherRequirements(idea)
 	if err != nil {
 		return types.CompletedProject{}, err
 	}
@@ -13,18 +13,9 @@ func ExecuteSoftwareDevelopmentWorkflow(idea types.Idea) (types.CompletedProject
 	if err != nil {
 		return types.CompletedProject{}, err
 	}
-	artifact, err := Implement(requirements, contracts)
+	project, err := Implement(requirements, contracts)
 	if err != nil {
 		return types.CompletedProject{}, err
 	}
-
-	// TODO: extract the RunnableSpecification from Artifact and run it.
-	// Blocked on: Artifact interface needs a RunnableSpecification() method,
-	// and ImplementStrategy must guarantee it returns ArtifactWithRunnableSpecification.
-	// When unblocked:
-	//   specification := artifact.RunnableSpecification()
-	//   if err = specification.Run(); err != nil {
-	//       return types.CompletedProject{}, err
-	//   }
-	return types.CompletedProject{Requirements: requirements, Contracts: contracts, Artifact: artifact}, nil
+	return types.CompletedProject{Requirements: requirements, Contracts: contracts, Project: project}, nil
 }
