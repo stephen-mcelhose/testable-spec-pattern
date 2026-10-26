@@ -60,5 +60,13 @@ Use when sub-artifacts are genuinely alternative techniques where choosing one p
 | [Use Cases](./use-cases.md)                  | Actors, goals, and interactions are the primary concern           |
 | [Domain Types](./domain-types.md)            | Named entities and relationships are the primary concern          |
 | [Gherkin Scenarios](./gherkin-scenarios.md)  | Concrete Given/When/Then behaviours are the primary concern       |
-| User Stories                                 | Lightweight; good for single-actor, single-goal slices            |
+| [User Stories](https://en.wikipedia.org/wiki/User_story) | Lightweight; good for single-actor, single-goal slices |
+| [BRD](https://en.wikipedia.org/wiki/Business_requirements_document) | Business-facing; communicates what the system should deliver in terms of business outcomes |
+| [FRD](https://en.wikipedia.org/wiki/Functional_requirements) | Formal functional specs; good when strict functional boundaries need documenting across a large team |
+| [PRD](https://en.wikipedia.org/wiki/Product_requirements_document) | Product/feature level; bridges business goals and technical requirements in product-led orgs |
 | [SRS](https://en.wikipedia.org/wiki/Software_requirements_specification) | Formal; good for regulated or large-scale contexts |
+| [Event Storming](https://en.wikipedia.org/wiki/Event_storming) | Collaborative domain discovery; surfaces domain events and aggregates across bounded contexts |
+| [Domain-Driven Design (DDD)](https://en.wikipedia.org/wiki/Domain-driven_design) | Strategic domain modeling; good when shared language between developers and domain experts matters |
+| [ERD](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model) | Data-centric; good when the problem is primarily about entities, attributes, and relationships |
+| [Agile (User Stories / Epics)](https://en.wikipedia.org/wiki/User_story) | Iterative; good for incremental delivery where requirements are refined sprint by sprint |
+| [Stakeholder Interview](https://en.wikipedia.org/wiki/Requirements_elicitation) | Discovery; good when requirements are unclear and must be elicited directly from stakeholders |
