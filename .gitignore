@@ -28,6 +28,9 @@ go.work.sum
 .agents/skills.json
 .agents/skills.lock
 
+# Sketch (local thinking space — not committed)
+sketch/
+
 # Secrets / env
 .env
 .env.*
