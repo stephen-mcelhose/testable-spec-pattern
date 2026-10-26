@@ -2,6 +2,17 @@
 
 Steering document for any agent working in this repo. Read this first.
 
+> [!WARNING]
+> **TODO — Issue [#48](https://github.com/stephen-mcelhose/testable-spec-pattern/issues/48)**
+>
+> The project structure, documentation, and skills have not yet been trimmed to what is actually useful.
+> There is a `sketch/` directory (gitignored) exploring what the project should look like organized by
+> lifecycle stage. Open questions include: where does shared vocabulary (concepts) live, what documentation
+> is genuinely user-facing vs. build artifact, and which skills earn a place in the final layout.
+>
+> **Do not treat the current `docs/` and `.agents/skills/` layout as settled.** Revisit issue #48 before
+> adding new documentation or skills.
+
 ## What this repo is
 
 A personal workshop for building a **Go behavioral-spec workflow** — tests that read like RFC 2119 contracts, grounded in domain names that bridge spec, implementation, and test.
