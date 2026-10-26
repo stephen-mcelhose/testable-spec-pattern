@@ -1,90 +1,37 @@
-# testable-spec-pattern
-
-A workflow for moving a software idea to a verified, runnable specification.
-
-Enter at any phase. Each phase produces an artifact. Each artifact feeds the next.
-
+---
+type: concept
+title: Docs Index
+description: Structured catalog of all docs/ knowledge base pages — updated on every write operation.
+tags: [index, docs]
+timestamp: 2026-10-23T22:52:54Z
 ---
 
-## [Idea](./idea/index.md)
+# Docs Index
 
-A raw concept, problem statement, or feature request. The workflow starts here.
-
-**Produces:** an Idea — the input to Requirements Gathering.
-
----
-
-## [Requirements Gathering](./requirements-gathering/index.md)
-
-Converts an Idea into Requirements. Requirements are composable — any one of the following independently satisfies the phase:
-
-| Artifact                                                           | Primary concern                        |
-| ------------------------------------------------------------------ | -------------------------------------- |
-| [Use Cases](./requirements-gathering/use-cases.md)                 | Actors, goals, interactions            |
-| [Domain Types](./requirements-gathering/domain-types.md)           | Named entities and relationships       |
-| [Gherkin Scenarios](./requirements-gathering/gherkin-scenarios.md) | Concrete Given/When/Then behaviours    |
-
-**Produces:** Requirements — the input to Contracts & Domain Modeling, Specifications, and Planning.
-
----
-
-## [Contracts & Domain Modeling](./contracts-and-domain-modeling/index.md)
-
-Produces machine-readable contracts and a domain model from Requirements.
-
-| Artifact                                                                  | What it is                              |
-| ------------------------------------------------------------------------- | --------------------------------------- |
-| [Contracts](./contracts-and-domain-modeling/contracts.md)                 | Proto / OpenAPI / schema — the shape    |
-| [Domain Model](./contracts-and-domain-modeling/domain-model.md)           | Go types — the named entities in code   |
-
-**Produces:** Contracts and a Domain Model — inputs to Specifications, Planning, and Implementation.
-
----
-
-## [Specifications](./specifications/index.md)
-
-Produces an RFC 2119 prose specification from Requirements and Contracts.
-
-| Artifact                                          | What it is                                    |
-| ------------------------------------------------- | --------------------------------------------- |
-| [Specification](./specifications/specification.md) | Named behavioral requirements in prose        |
-
-**Produces:** a Specification — the input to Planning, Implementation, and Testing.
-
----
-
-## [Planning](./planning/index.md)
-
-Produces an implementation plan from Specifications and Contracts.
-
-| Artifact                              | What it is                                 |
-| ------------------------------------- | ------------------------------------------ |
-| [Plan](./planning/plan.md)            | Ordered implementation tasks with rationale |
-
-**Produces:** a Plan — the input to Implementation.
-
----
-
-## [Implementation](./implementation/index.md)
-
-Produces working code from Contracts, Specifications, and a Plan.
-
-| Artifact                                        | What it is                        |
-| ----------------------------------------------- | --------------------------------- |
-| [Implementation](./implementation/index.md)     | Scaffolded, wired, compilable Go  |
-
-**Produces:** an Implementation — the input to Testing.
-
----
-
-## [Testing](./testing/index.md)
-
-Produces a Runnable Specification from the Implementation.
-
-| Artifact                                                        | What it is                                    |
-| --------------------------------------------------------------- | --------------------------------------------- |
-| [Runnable Specification](./testing/runnable-specification.md)   | Go tests named as RFC 2119 requirements       |
-
-**Produces:** a passing test run — the definition of done.
-
-> A passing Runnable Specification means the Implementation satisfies its Contracts and Specifications.
+| Page                                                                                                 | Type           | Description                                                                                          |
+| ---------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------- |
+| [Docs Conventions](./conventions.md)                                                                                 | concept        | Canonical conventions for the docs/ knowledge base — folder taxonomy, OKF frontmatter, naming.      |
+| [ADR-001: Project Structure](./decisions/001-project-structure.md)                                                  | decision       | Establishes the top-level layout — skills in .agents/skills/, docs as a wiki, examples/ standalone modules. |
+| [ADR-002: GitHub Issues as Work Tracker](./decisions/002-github-issues-as-work-tracker.md)                         | decision       | Use GitHub issues to track skill-building work across sessions.                                              |
+| [ADR-003: Kanban Workflow via GitHub Issues](./decisions/003-kanban-workflow.md)                                    | decision       | Board state, Definition of Ready, session protocol, and WIP limit — applies to humans and agents equally.    |
+| [ADR-004: Use internal/ not pkg/ for Go packages](./decisions/004-internal-over-pkg.md)                            | decision       | Why go-project-scaffold prescribes internal/ and rejects pkg/; links to the community dispute (issue #117). |
+| [ADR-005: Prefer testify for assertions](./decisions/005-prefer-testify.md)                                        | decision       | Default to testify assert/require; revisit trigger: if Go stdlib gains built-in assertion support.           |
+| [ADR-006: Skill eval artifacts live inside the skill directory](./decisions/006-skill-eval-location.md)            | decision       | Evals live in `{skill}/evals/` per agentskills standard; workspace outputs are adjacent and not committed.  |
+| [Use Cases — Progressive Discovery](./use-cases-progressive-discovery.md)                            | concept        | A use case format where each step's output becomes the next step's input — every slot linked and named. |
+| [Personas](./personas/index.md)                                                                       | concept        | Named actors in the progressive discovery workflow — who they are, what they own, and the persona format. |
+| [Software Engineer](./personas/software-engineer.md)                                                  | concept        | Primary actor in the workflow — owns every phase from idea to verified implementation.               |
+| [Test Discipline: Behavioral Specification Style](./discipline.md)                                   | concept        | The discipline for sustaining RFC 2119-style behavioral spec tests.                                  |
+| [Project: Testable Spec Pattern](./ideation/task.md)                                                 | design-doc     | Scope and goals for the Go behavioral-spec workflow project.                                         |
+| [Domain Names as the Bridge](./ideation/domain-names-as-bridge.md)                                  | proposal       | Hypothesis that domain names are a necessary precondition for requirement-traceable testable specs.  |
+| [Contract-First as the Foundation](./ideation/contract-first.md)                                    | proposal       | Hypothesis that contract-first (OpenAPI, proto, ROD) naturally produces testable spec targets.       |
+| [Modeling the Workflow with Code](./ideation/modeling-with-code.md)                                 | proposal       | Code-style sketch of the software development lifecycle — typed functions with Undefined placeholders for types not yet modeled. |
+| [Composable Skills Architecture](./research/composable-skills.md)                                   | spike          | Research into Matt Pocock's composable skills patterns and how to apply them here.                   |
+| [AIP Proto Learnings — iter-1 Petstore](./research/aip-proto-learnings.md)                         | spike          | Concrete AIP rule discoveries from the iter-1 Petstore proto revision — the delta between naive proto authoring and what api-linter + AIP require. |
+| [gRPC method implementation process](./research/implementation/grpc-methods/process.md)            | how-to         | Three-step fill-out for each generated RPC: proto validation → business rules → storage.              |
+| [Plans: go-behavioral-spec canonical examples](./plans/stephen-workflow-skills/README.md)            | playbook       | Execution order and shared decisions for the go-behavioral-spec example series.                      |
+| [Lessons Learned — go-behavioral-spec examples (01–03)](./plans/stephen-workflow-skills/lessons-learned.md) | concept | Distilled norms from examples 01–03 for agents and humans implementing future examples.              |
+| [01 — Pure function behavioral spec](./plans/stephen-workflow-skills/01-pure-function.md)            | example-plan   | Plan for the NormalizePetName example — the series baseline.                                        |
+| [02a — Injected dependency (functional)](./plans/stephen-workflow-skills/02-injected-dependency-functional.md) | example-plan | Plan for the functional-injection example (BuildPetView).                               |
+| [02b — Injected dependency (method / struct)](./plans/stephen-workflow-skills/02-injected-dependency-method.md) | example-plan | Plan for the struct-method injection example (PetViewer).                              |
+| [03 — PetStore resource-oriented API](./plans/stephen-workflow-skills/03-petstore-api.md)            | example-plan   | Plan for the AIP-aligned PetStore CRUD example.                                                     |
+| [04 — Store over injected DB](./plans/stephen-workflow-skills/04-in-memory-store.md)                 | example-plan   | Plan for the storage-leaf KnownError contract example.                                              |
