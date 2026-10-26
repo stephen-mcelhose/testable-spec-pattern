@@ -28,7 +28,7 @@ Contracts that cross layer boundaries within a process — expressed in Go, enfo
 - **Layered interfaces** (clean architecture style) — each architectural layer defines the interface its outer layer must satisfy; nothing leaks inward
 - **Strategy function signatures** — functions as contracts for pluggable behaviour
 
-A [Domain Model](./domain-modeling.md) is a set of code contracts: it names the domain's interfaces and strategy functions, leaving implementations as stubs. The model *is* the contract expressed in Go.
+A [Domain Model](./domain-model.md) is a set of code contracts: it names the domain's interfaces and strategy functions, leaving implementations as stubs. The model *is* the contract expressed in Go.
 
 ## What Contracts Are Not
 
@@ -37,12 +37,24 @@ Contracts define shape and obligation — not behaviour. How the system behaves 
 ## Inputs
 
 - [Requirements](../requirements-gathering/requirements.md)
-- Or a [Domain Model](./domain-modeling.md) — the model surfaces the code contracts that inform wire contract design
+- Or a [Domain Model](./domain-model.md) — the model surfaces the code contracts that inform wire contract design
 
 ## Outputs
 
 - Contracts consumed by:
   - [Specifications](../specifications/index.md)
-  - [Design](../design/index.md)
   - [Implementation](../implementation/index.md)
-  - [Runnable Specifications](../runnable-specifications/index.md)
+  - [Testing](../testing/index.md)
+
+## Known forms
+
+This workflow is opinionated: wire contracts are defined using [Resource Oriented Design](https://google.aip.dev/) expressed as proto files. Other forms exist and are listed here for context.
+
+| Form                                                                                           | When to reach for it                                                   |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [Proto / gRPC](./proto-contracts.md)                                                           | Service and resource definitions; AIP-compliant (**preferred**)        |
+| [OpenAPI / Swagger](https://en.wikipedia.org/wiki/OpenAPI_Specification)                      | REST API contracts; HTTP-native                                         |
+| [AsyncAPI](https://www.asyncapi.com/)                                                          | Event-driven / messaging API contracts                                  |
+| [GraphQL Schema](https://en.wikipedia.org/wiki/GraphQL)                                        | Flexible query-driven API contracts                                     |
+| [JSON Schema](https://en.wikipedia.org/wiki/JSON#JSON_Schema)                                  | Data shape validation; often composed with OpenAPI                      |
+| [Go interfaces](https://go.dev/tour/methods/9)                                                 | Code contracts; layer boundaries within a process (**preferred**)       |
